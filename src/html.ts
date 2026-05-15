@@ -24,6 +24,8 @@ export function generateHtml(config: DocServerConfig): string {
   const mermaidInitJs = f.mermaid ? readAsset('assets/js/mermaid-init.js') : '';
   const mermaidPluginJs = f.mermaid ? readAsset('assets/js/mermaid-plugin.js') : '';
   const mermaidViewerJs = f.mermaidViewer ? readAsset('assets/js/mermaid-viewer.js') : '';
+  const fontSizeJs = readAsset('assets/js/font-size.js');
+  const sidebarResizeJs = readAsset('assets/js/sidebar-resize.js');
 
   const lines: string[] = [];
 
@@ -37,6 +39,14 @@ export function generateHtml(config: DocServerConfig): string {
   lines.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">');
   lines.push('  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">');
   lines.push(`  <style>${customCss}</style>`);
+  lines.push(`  <style>:root { --doc-font-size: ${config.fontSize}px; }
+.sidebar,
+.sidebar-nav,
+.sidebar-nav a,
+.sidebar-nav ul,
+.sidebar-nav li,
+.sidebar-nav p { font-size: var(--doc-font-size) !important; }
+.markdown-section { font-size: var(--doc-font-size); }</style>`);
   if (f.mermaidViewer) {
     lines.push(`  <style>${mermaidViewerCss}</style>`);
   }
@@ -135,6 +145,8 @@ export function generateHtml(config: DocServerConfig): string {
   lines.push('    ws.onmessage = (e) => { const msg = JSON.parse(e.data); if (msg.type === \'reload\') window.location.reload(); };');
   lines.push('    ws.onclose = () => setTimeout(() => window.location.reload(), 1000);');
   lines.push('  </script>');
+  lines.push(`  <script>${fontSizeJs}</script>`);
+  lines.push(`  <script>${sidebarResizeJs}</script>`);
   lines.push('</body>');
   lines.push('</html>');
 

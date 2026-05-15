@@ -2,11 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { generateHtml } from '../src/html.js';
 import type { DocServerConfig } from '../src/config.js';
 
-function makeConfig(overrides: Partial<DocServerConfig['features']> = {}): DocServerConfig {
+function makeConfig(
+  overrides: Partial<DocServerConfig['features']> = {},
+  fontSize = 16,
+): DocServerConfig {
   return {
     name: 'Test Docs',
     port: 4000,
     homepage: 'README.md',
+    fontSize,
     sidebar: { numberedPrefix: true, collapsedSections: true },
     features: {
       taskLists: true,
@@ -117,5 +121,29 @@ describe('generateHtml', () => {
   it('excludes task-lists script when disabled', () => {
     const html = generateHtml(makeConfig({ taskLists: false }));
     expect(html).not.toContain('renderTaskLists');
+  });
+
+  it('contains --doc-font-size: 16px by default', () => {
+    const html = generateHtml(makeConfig({}, 16));
+    expect(html).toContain('--doc-font-size: 16px');
+  });
+
+  it('contains --doc-font-size: 20px when fontSize is 20', () => {
+    const html = generateHtml(makeConfig({}, 20));
+    expect(html).toContain('--doc-font-size: 20px');
+  });
+
+  it('contains sidebar-resize-handle in all configurations', () => {
+    const html = generateHtml(makeConfig());
+    expect(html).toContain('sidebar-resize-handle');
+  });
+
+  it('contains sidebar-resize-handle even when all features disabled', () => {
+    const html = generateHtml(makeConfig({
+      taskLists: false, mermaid: false, mermaidViewer: false,
+      copyCode: false, search: false, pagination: false,
+      zoomImage: false, pageTitle: false,
+    }));
+    expect(html).toContain('sidebar-resize-handle');
   });
 });

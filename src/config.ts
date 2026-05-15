@@ -5,6 +5,7 @@ export interface DocServerConfig {
   name: string;
   port: number;
   homepage: string;
+  fontSize: number;
   sidebar: {
     numberedPrefix: boolean;
     collapsedSections: boolean;
@@ -25,6 +26,7 @@ export type PartialConfig = Partial<{
   name: string;
   port: number;
   homepage: string;
+  fontSize: number;
   sidebar: Partial<DocServerConfig['sidebar']>;
   features: Partial<DocServerConfig['features']>;
 }>;
@@ -64,6 +66,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
     name: path.basename(docsDir),
     port: 4000,
     homepage: defaultHomepage(docsDir),
+    fontSize: 16,
     sidebar: {
       numberedPrefix: true,
       collapsedSections: true,
@@ -84,6 +87,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
     name: fileConfig.name ?? defaults.name,
     port: fileConfig.port ?? defaults.port,
     homepage: fileConfig.homepage ?? defaults.homepage,
+    fontSize: fileConfig.fontSize ?? defaults.fontSize,
     sidebar: {
       numberedPrefix: fileConfig.sidebar?.numberedPrefix ?? defaults.sidebar.numberedPrefix,
       collapsedSections: fileConfig.sidebar?.collapsedSections ?? defaults.sidebar.collapsedSections,

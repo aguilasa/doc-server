@@ -55,6 +55,24 @@ describe('loadConfig', () => {
     fs.rmSync(tmpDir, { recursive: true });
   });
 
+  it('fontSize defaults to 16', () => {
+    const docsDir = path.join(fixturesDir, 'with-readme');
+    const config = loadConfig(docsDir, '/nonexistent/.docserverrc');
+    expect(config.fontSize).toBe(16);
+  });
+
+  it('fontSize is read from .docserverrc', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
+    const rcPath = path.join(tmpDir, '.docserverrc');
+    fs.writeFileSync(rcPath, JSON.stringify({ fontSize: 20 }));
+    const docsDir = path.join(fixturesDir, 'with-readme');
+
+    const config = loadConfig(docsDir, rcPath);
+    expect(config.fontSize).toBe(20);
+
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
   it('CLI flags override .docserverrc', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
     const rcPath = path.join(tmpDir, '.docserverrc');

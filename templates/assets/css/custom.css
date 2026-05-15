@@ -1,23 +1,5 @@
 /* Custom styles for Docsify */
 
-/* Font size */
-body {
-  font-size: 16px;
-}
-
-.sidebar,
-.sidebar-nav,
-.sidebar-nav a,
-.sidebar-nav ul,
-.sidebar-nav li,
-.sidebar-nav p {
-  font-size: 16px !important;
-}
-
-.markdown-section {
-  font-size: 16px;
-}
-
 /* Task Lists (Checkboxes) */
 .markdown-section input[type="checkbox"] {
   appearance: auto !important;
