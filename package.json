@@ -8,7 +8,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest"
+    "test": "vitest",
+    "install:local": "npm run build && npm install -g .",
+    "uninstall:local": "npm uninstall -g doc-server"
   },
   "dependencies": {
     "chokidar": "^3.6.0",
