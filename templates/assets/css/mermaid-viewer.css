@@ -1,0 +1,209 @@
+/* Mermaid Viewer Overlay Styles */
+.mermaid-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.mermaid-viewer-overlay.active {
+  display: flex;
+}
+
+.mermaid-viewer-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 90vw;
+  height: 90vh;
+  max-width: 1400px;
+  max-height: 900px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.mermaid-viewer-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mermaid-viewer-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.mermaid-viewer-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mermaid-viewer-btn {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mermaid-viewer-btn:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.mermaid-viewer-btn:active {
+  background: #e9ecef;
+}
+
+.mermaid-viewer-close {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.mermaid-viewer-close:hover {
+  background: #c82333;
+}
+
+.mermaid-viewer-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+}
+
+.mermaid-viewer-svg-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.mermaid-viewer-svg-wrapper.dragging {
+  cursor: grabbing;
+}
+
+.mermaid-viewer-svg {
+  max-width: none;
+  max-height: none;
+  transform-origin: center center;
+  transition: transform 0.1s ease-out;
+}
+
+.mermaid-viewer-zoom-indicator {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: monospace;
+  pointer-events: none;
+}
+
+.mermaid-viewer-resize-handle {
+  position: absolute;
+  background: #007bff;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.mermaid-viewer-container:hover .mermaid-viewer-resize-handle {
+  opacity: 0.7;
+}
+
+.mermaid-viewer-resize-handle:hover {
+  opacity: 1;
+}
+
+.mermaid-viewer-resize-handle.nw {
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  cursor: nw-resize;
+  border-radius: 0 0 0 8px;
+}
+
+.mermaid-viewer-resize-handle.ne {
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  cursor: ne-resize;
+  border-radius: 0 0 8px 0;
+}
+
+.mermaid-viewer-resize-handle.sw {
+  bottom: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  cursor: sw-resize;
+  border-radius: 0 8px 0 0;
+}
+
+.mermaid-viewer-resize-handle.se {
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  cursor: se-resize;
+  border-radius: 8px 0 0 0;
+}
+
+.mermaid-viewer-move-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: transparent;
+  cursor: move;
+}
+
+/* Custom scrollbar for mermaid viewer */
+.mermaid-viewer-svg-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mermaid-viewer-svg-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.mermaid-viewer-svg-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.mermaid-viewer-svg-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

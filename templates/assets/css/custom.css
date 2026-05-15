@@ -1,0 +1,56 @@
+/* Custom styles for Docsify */
+
+/* Font size */
+body {
+  font-size: 16px;
+}
+
+.sidebar,
+.sidebar-nav,
+.sidebar-nav a,
+.sidebar-nav ul,
+.sidebar-nav li,
+.sidebar-nav p {
+  font-size: 16px !important;
+}
+
+.markdown-section {
+  font-size: 16px;
+}
+
+/* Task Lists (Checkboxes) */
+.markdown-section input[type="checkbox"] {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  -moz-appearance: checkbox !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 8px 0 0 !important;
+  padding: 0 !important;
+  cursor: default !important;
+  vertical-align: top !important;
+  position: relative !important;
+  top: 4px !important;
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+}
+
+/* Task list items */
+.markdown-section li.task-list-item {
+  list-style-type: none !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  margin-left: -20px !important;
+}
+
+.markdown-section li.task-list-item > p {
+  margin: 0 !important;
+  flex: 1 !important;
+}
+
+/* Styling for checked items */
+.markdown-section li.task-list-item:has(input[type="checkbox"]:checked) > p {
+  opacity: 0.6;
+  text-decoration: line-through;
+  color: #999;
+}

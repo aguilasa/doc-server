@@ -1,0 +1,89 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { getTitleFromFile } from './title.js';
+
+export interface SidebarOptions {
+  numberedPrefix: boolean;
+  collapsedSections: boolean;
+}
+
+function humanizeDir(name: string): string {
+  return name
+    .replace(/[-_]/g, ' ')
+    .replace(/^\w/, c => c.toUpperCase());
+}
+
+function numericPrefix(filename: string): number | null {
+  const m = filename.match(/^(\d+)-/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function sortMdFiles(files: string[], numberedPrefix: boolean): string[] {
+  const readme = files.filter(f => f.toLowerCase() === 'readme.md');
+  const rest = files.filter(f => f.toLowerCase() !== 'readme.md');
+
+  if (numberedPrefix) {
+    const numbered = rest.filter(f => numericPrefix(f) !== null);
+    const other = rest.filter(f => numericPrefix(f) === null);
+
+    numbered.sort((a, b) => (numericPrefix(a) ?? 0) - (numericPrefix(b) ?? 0));
+    other.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+    return [...readme, ...numbered, ...other];
+  }
+
+  rest.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  return [...readme, ...rest];
+}
+
+function buildSection(
+  dirPath: string,
+  docsDir: string,
+  opts: SidebarOptions,
+  indent: string
+): string {
+  let items: fs.Dirent[];
+  try {
+    items = fs.readdirSync(dirPath, { withFileTypes: true });
+  } catch {
+    return '';
+  }
+
+  const mdFiles = items
+    .filter(i => i.isFile() && i.name.endsWith('.md') && i.name !== '_sidebar.md')
+    .map(i => i.name);
+
+  const subdirs = items
+    .filter(i => i.isDirectory() && !i.name.startsWith('.') && !i.name.startsWith('_'))
+    .map(i => i.name)
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  const sorted = sortMdFiles(mdFiles, opts.numberedPrefix);
+
+  let lines: string[] = [];
+
+  for (const file of sorted) {
+    const fullPath = path.join(dirPath, file);
+    const relPath = path.relative(docsDir, fullPath).replace(/\\/g, '/');
+    const title = getTitleFromFile(fullPath);
+    lines.push(`${indent}* [${title}](${relPath})`);
+  }
+
+  for (const subdir of subdirs) {
+    const subdirPath = path.join(dirPath, subdir);
+    const sectionTitle = humanizeDir(subdir);
+    const sectionContent = buildSection(subdirPath, docsDir, opts, indent + '  ');
+
+    if (!sectionContent.trim()) continue;
+
+    lines.push('');
+    lines.push(`${indent}* **${sectionTitle}**`);
+    lines.push(sectionContent.trimEnd());
+  }
+
+  return lines.join('\n') + '\n';
+}
+
+export function generateSidebar(docsDir: string, opts: SidebarOptions): string {
+  return buildSection(docsDir, docsDir, opts, '');
+}

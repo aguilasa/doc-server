@@ -1,0 +1,141 @@
+import * as http from 'node:http';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { WebSocketServer, WebSocket } from 'ws';
+import chokidar from 'chokidar';
+import { DocServerConfig } from './config.js';
+import { generateSidebar } from './sidebar.js';
+import { generateHtml } from './html.js';
+
+const MIME_TYPES: Record<string, string> = {
+  '.md': 'text/markdown; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.pdf': 'application/pdf',
+  '.ico': 'image/x-icon',
+  '.webp': 'image/webp',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+};
+
+function getMimeType(filepath: string): string {
+  const ext = path.extname(filepath).toLowerCase();
+  return MIME_TYPES[ext] ?? 'application/octet-stream';
+}
+
+function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise(resolve => {
+    const tester = http.createServer();
+    tester.once('error', () => resolve(false));
+    tester.once('listening', () => {
+      tester.close(() => resolve(true));
+    });
+    tester.listen(port, '127.0.0.1');
+  });
+}
+
+export async function findAvailablePort(startPort: number): Promise<number> {
+  let port = startPort;
+  while (!(await isPortAvailable(port))) {
+    port++;
+  }
+  return port;
+}
+
+export function startServer(docsDir: string, config: DocServerConfig, port: number): void {
+  let sidebarContent = generateSidebar(docsDir, config.sidebar);
+  let htmlContent = generateHtml(config);
+
+  const clients = new Set<WebSocket>();
+
+  const server = http.createServer((req, res) => {
+    const url = req.url ?? '/';
+    const urlPath = url.split('?')[0];
+
+    if (req.method !== 'GET') {
+      res.writeHead(405);
+      res.end('Method Not Allowed');
+      return;
+    }
+
+    if (urlPath === '/') {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(htmlContent);
+      return;
+    }
+
+    if (urlPath === '/_sidebar.md') {
+      res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8' });
+      res.end(sidebarContent);
+      return;
+    }
+
+    // Static file serving
+    const filePath = path.join(docsDir, decodeURIComponent(urlPath));
+
+    // Security: ensure path stays within docsDir
+    const resolved = path.resolve(filePath);
+    if (!resolved.startsWith(path.resolve(docsDir))) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
+
+    fs.readFile(resolved, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end('Not Found');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': getMimeType(resolved) });
+      res.end(data);
+    });
+  });
+
+  // WebSocket server on the same HTTP server, path /_ws
+  const wss = new WebSocketServer({ server, path: '/_ws' });
+
+  wss.on('connection', (ws) => {
+    clients.add(ws);
+    ws.on('close', () => clients.delete(ws));
+  });
+
+  function broadcast(message: object): void {
+    const data = JSON.stringify(message);
+    for (const client of clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(data);
+      }
+    }
+  }
+
+  // Watcher
+  const watcher = chokidar.watch(docsDir, {
+    persistent: true,
+    ignoreInitial: true,
+    ignored: /(^|[/\\])\../,
+  });
+
+  function onMdChange(filePath: string): void {
+    if (!filePath.endsWith('.md')) return;
+    sidebarContent = generateSidebar(docsDir, config.sidebar);
+    broadcast({ type: 'reload' });
+  }
+
+  watcher.on('add', onMdChange);
+  watcher.on('change', onMdChange);
+  watcher.on('unlink', onMdChange);
+
+  server.listen(port, () => {
+    console.log(`Documentação disponível em http://localhost:${port}`);
+  });
+}
