@@ -18,6 +18,7 @@ describe('loadConfig', () => {
     expect(config.sidebar.collapsedSections).toBe(true);
     expect(config.features.taskLists).toBe(true);
     expect(config.features.mermaid).toBe(true);
+    expect(config.features.youtubeEmbed).toBe(true);
   });
 
   it('picks first .md alphabetically when no README', () => {
@@ -51,6 +52,19 @@ describe('loadConfig', () => {
     expect(config.features.mermaid).toBe(false);
     expect(config.features.search).toBe(false);
     expect(config.features.taskLists).toBe(true); // default preserved
+
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  it('disables youtubeEmbed via .docserverrc', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
+    const rcPath = path.join(tmpDir, '.docserverrc');
+    fs.writeFileSync(rcPath, JSON.stringify({ features: { youtubeEmbed: false } }));
+    const docsDir = path.join(fixturesDir, 'with-readme');
+
+    const config = loadConfig(docsDir, rcPath);
+    expect(config.features.youtubeEmbed).toBe(false);
+    expect(config.features.mermaid).toBe(true); // default preserved
 
     fs.rmSync(tmpDir, { recursive: true });
   });

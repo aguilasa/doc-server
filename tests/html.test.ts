@@ -21,6 +21,7 @@ function makeConfig(
       pagination: true,
       zoomImage: true,
       pageTitle: true,
+      youtubeEmbed: true,
       ...overrides,
     },
   };
@@ -107,6 +108,17 @@ describe('generateHtml', () => {
     expect(html).not.toContain('zoom-image');
   });
 
+  it('includes youtube-embed CSS and JS when enabled', () => {
+    const html = generateHtml(makeConfig({ youtubeEmbed: true }));
+    expect(html).toContain('youtube-embed');
+    expect(html).toContain('youtube-nocookie.com/embed/');
+  });
+
+  it('excludes youtube-embed when disabled', () => {
+    const html = generateHtml(makeConfig({ youtubeEmbed: false }));
+    expect(html).not.toContain('youtube-nocookie.com/embed/');
+  });
+
   it('includes live reload WebSocket script', () => {
     const html = generateHtml(makeConfig());
     expect(html).toContain('/_ws');
@@ -142,7 +154,7 @@ describe('generateHtml', () => {
     const html = generateHtml(makeConfig({
       taskLists: false, mermaid: false, mermaidViewer: false,
       copyCode: false, search: false, pagination: false,
-      zoomImage: false, pageTitle: false,
+      zoomImage: false, pageTitle: false, youtubeEmbed: false,
     }));
     expect(html).toContain('sidebar-resize-handle');
   });

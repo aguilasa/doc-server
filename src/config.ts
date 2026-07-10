@@ -19,6 +19,7 @@ export interface DocServerConfig {
     pagination: boolean;
     zoomImage: boolean;
     pageTitle: boolean;
+    youtubeEmbed: boolean;
   };
 }
 
@@ -80,6 +81,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
       pagination: true,
       zoomImage: true,
       pageTitle: true,
+      youtubeEmbed: true,
     },
   };
 
@@ -101,6 +103,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
       pagination: fileConfig.features?.pagination ?? defaults.features.pagination,
       zoomImage: fileConfig.features?.zoomImage ?? defaults.features.zoomImage,
       pageTitle: fileConfig.features?.pageTitle ?? defaults.features.pageTitle,
+      youtubeEmbed: fileConfig.features?.youtubeEmbed ?? defaults.features.youtubeEmbed,
     },
   };
 

@@ -24,6 +24,8 @@ export function generateHtml(config: DocServerConfig): string {
   const mermaidInitJs = f.mermaid ? readAsset('assets/js/mermaid-init.js') : '';
   const mermaidPluginJs = f.mermaid ? readAsset('assets/js/mermaid-plugin.js') : '';
   const mermaidViewerJs = f.mermaidViewer ? readAsset('assets/js/mermaid-viewer.js') : '';
+  const youtubeEmbedCss = f.youtubeEmbed ? readAsset('assets/css/youtube-embed.css') : '';
+  const youtubeEmbedJs = f.youtubeEmbed ? readAsset('assets/js/youtube-embed.js') : '';
   const fontSizeJs = readAsset('assets/js/font-size.js');
   const sidebarResizeJs = readAsset('assets/js/sidebar-resize.js');
 
@@ -49,6 +51,9 @@ export function generateHtml(config: DocServerConfig): string {
 .markdown-section { font-size: var(--doc-font-size); }</style>`);
   if (f.mermaidViewer) {
     lines.push(`  <style>${mermaidViewerCss}</style>`);
+  }
+  if (f.youtubeEmbed) {
+    lines.push(`  <style>${youtubeEmbedCss}</style>`);
   }
   lines.push('</head>');
   lines.push('<body>');
@@ -137,6 +142,9 @@ export function generateHtml(config: DocServerConfig): string {
   }
   if (f.mermaidViewer) {
     lines.push(`  <script>${mermaidViewerJs}</script>`);
+  }
+  if (f.youtubeEmbed) {
+    lines.push(`  <script>${youtubeEmbedJs}</script>`);
   }
   lines.push('');
   lines.push('  <!-- Live reload -->');
