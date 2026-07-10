@@ -65,8 +65,9 @@ function buildSection(
   for (const file of sorted) {
     const fullPath = path.join(dirPath, file);
     const relPath = path.relative(docsDir, fullPath).replace(/\\/g, '/');
+    const encodedPath = relPath.split('/').map(s => encodeURIComponent(s)).join('/');
     const title = getTitleFromFile(fullPath);
-    lines.push(`${indent}* [${title}](${relPath})`);
+    lines.push(`${indent}* [${title}](${encodedPath})`);
   }
 
   for (const subdir of subdirs) {
