@@ -32,6 +32,41 @@ function getMimeType(filepath: string): string {
   return MIME_TYPES[ext] ?? 'application/octet-stream';
 }
 
+function serveDirectoryIndex(dirPath: string, res: http.ServerResponse): void {
+  const readmePath = path.join(dirPath, 'README.md');
+  fs.readFile(readmePath, (err, data) => {
+    if (!err) {
+      res.writeHead(200, { 'Content-Type': getMimeType(readmePath) });
+      res.end(data);
+      return;
+    }
+    // No README.md — fall back to first .md file alphabetically
+    let files: string[];
+    try {
+      files = fs.readdirSync(dirPath)
+        .filter(f => f.endsWith('.md'))
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    } catch {
+      files = [];
+    }
+    if (files.length === 0) {
+      res.writeHead(404);
+      res.end('Not Found');
+      return;
+    }
+    const firstFile = path.join(dirPath, files[0]);
+    fs.readFile(firstFile, (err2, data2) => {
+      if (err2) {
+        res.writeHead(404);
+        res.end('Not Found');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': getMimeType(firstFile) });
+      res.end(data2);
+    });
+  });
+}
+
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const tester = http.createServer();
@@ -92,6 +127,23 @@ export function startServer(docsDir: string, config: DocServerConfig, port: numb
 
     fs.readFile(resolved, (err, data) => {
       if (err) {
+        if (err.code === 'EISDIR') {
+          serveDirectoryIndex(resolved, res);
+          return;
+        }
+        if (err.code === 'ENOENT' && resolved.endsWith('.md')) {
+          // Docsify appends .md to paths without trailing slash (e.g. /subdir → /subdir.md).
+          // If the path without .md is a directory, serve its index instead.
+          const possibleDir = resolved.slice(0, -3);
+          if (
+            path.resolve(possibleDir).startsWith(path.resolve(docsDir)) &&
+            fs.existsSync(possibleDir) &&
+            fs.statSync(possibleDir).isDirectory()
+          ) {
+            serveDirectoryIndex(possibleDir, res);
+            return;
+          }
+        }
         res.writeHead(404);
         res.end('Not Found');
         return;
