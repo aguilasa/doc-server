@@ -5,7 +5,7 @@ import { generateSidebar } from '../src/sidebar.js';
 
 const fixturesDir = path.join(fileURLToPath(import.meta.url), '../../tests/fixtures');
 
-const defaultOpts = { numberedPrefix: true, collapsedSections: true };
+const defaultOpts = { numberedPrefix: true, collapsedSections: true, includeDotFolders: false };
 
 describe('generateSidebar', () => {
   it('generates sidebar for simple folder (no README)', () => {
@@ -55,5 +55,25 @@ describe('generateSidebar', () => {
     const result = generateSidebar(docsDir, defaultOpts);
     expect(result).toContain('README.md');
     expect(result.indexOf('README.md')).toBeLessThan(result.indexOf('**Api**'));
+  });
+
+  it('ignores a .ignore folder when scanning for markdown files', () => {
+    const docsDir = path.join(fixturesDir, 'with-ignored-dir');
+    const result = generateSidebar(docsDir, defaultOpts);
+    expect(result).not.toContain('secret.md');
+    expect(result).not.toContain('.ignore');
+  });
+
+  it('ignores dot-prefixed folders by default', () => {
+    const docsDir = path.join(fixturesDir, 'with-ignored-dir');
+    const result = generateSidebar(docsDir, defaultOpts);
+    expect(result).not.toContain('hidden.md');
+  });
+
+  it('scans dot-prefixed folders when includeDotFolders is enabled, but still skips .ignore', () => {
+    const docsDir = path.join(fixturesDir, 'with-ignored-dir');
+    const result = generateSidebar(docsDir, { ...defaultOpts, includeDotFolders: true });
+    expect(result).toContain('hidden.md');
+    expect(result).not.toContain('secret.md');
   });
 });

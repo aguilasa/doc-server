@@ -174,7 +174,15 @@ export function startServer(docsDir: string, config: DocServerConfig, port: numb
   const watcher = chokidar.watch(docsDir, {
     persistent: true,
     ignoreInitial: true,
-    ignored: /(^|[/\\])\../,
+    ignored: (watchedPath: string) => {
+      const rel = path.relative(docsDir, watchedPath).replace(/\\/g, '/');
+      if (!rel || rel.startsWith('..')) return false;
+      return rel.split('/').some(segment =>
+        segment === '.ignore' ||
+        segment.startsWith('_') ||
+        (!config.sidebar.includeDotFolders && segment.startsWith('.'))
+      );
+    },
   });
 
   function onMdChange(filePath: string): void {

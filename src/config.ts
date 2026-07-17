@@ -9,6 +9,7 @@ export interface DocServerConfig {
   sidebar: {
     numberedPrefix: boolean;
     collapsedSections: boolean;
+    includeDotFolders: boolean;
   };
   features: {
     taskLists: boolean;
@@ -71,6 +72,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
     sidebar: {
       numberedPrefix: true,
       collapsedSections: true,
+      includeDotFolders: false,
     },
     features: {
       taskLists: true,
@@ -93,6 +95,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
     sidebar: {
       numberedPrefix: fileConfig.sidebar?.numberedPrefix ?? defaults.sidebar.numberedPrefix,
       collapsedSections: fileConfig.sidebar?.collapsedSections ?? defaults.sidebar.collapsedSections,
+      includeDotFolders: fileConfig.sidebar?.includeDotFolders ?? defaults.sidebar.includeDotFolders,
     },
     features: {
       taskLists: fileConfig.features?.taskLists ?? defaults.features.taskLists,

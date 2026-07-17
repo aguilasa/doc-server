@@ -11,7 +11,7 @@ function makeConfig(
     port: 4000,
     homepage: 'README.md',
     fontSize,
-    sidebar: { numberedPrefix: true, collapsedSections: true },
+    sidebar: { numberedPrefix: true, collapsedSections: true, includeDotFolders: false },
     features: {
       taskLists: true,
       mermaid: true,

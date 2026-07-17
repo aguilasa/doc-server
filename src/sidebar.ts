@@ -5,6 +5,7 @@ import { getTitleFromFile } from './title.js';
 export interface SidebarOptions {
   numberedPrefix: boolean;
   collapsedSections: boolean;
+  includeDotFolders: boolean;
 }
 
 function humanizeDir(name: string): string {
@@ -54,7 +55,12 @@ function buildSection(
     .map(i => i.name);
 
   const subdirs = items
-    .filter(i => i.isDirectory() && !i.name.startsWith('.') && !i.name.startsWith('_'))
+    .filter(i =>
+      i.isDirectory() &&
+      i.name !== '.ignore' &&
+      !i.name.startsWith('_') &&
+      (opts.includeDotFolders || !i.name.startsWith('.'))
+    )
     .map(i => i.name)
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 

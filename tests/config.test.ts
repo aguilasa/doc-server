@@ -16,6 +16,7 @@ describe('loadConfig', () => {
     expect(config.homepage).toBe('README.md');
     expect(config.sidebar.numberedPrefix).toBe(true);
     expect(config.sidebar.collapsedSections).toBe(true);
+    expect(config.sidebar.includeDotFolders).toBe(false);
     expect(config.features.taskLists).toBe(true);
     expect(config.features.mermaid).toBe(true);
     expect(config.features.youtubeEmbed).toBe(true);
@@ -52,6 +53,19 @@ describe('loadConfig', () => {
     expect(config.features.mermaid).toBe(false);
     expect(config.features.search).toBe(false);
     expect(config.features.taskLists).toBe(true); // default preserved
+
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  it('enables includeDotFolders via .docserverrc', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
+    const rcPath = path.join(tmpDir, '.docserverrc');
+    fs.writeFileSync(rcPath, JSON.stringify({ sidebar: { includeDotFolders: true } }));
+    const docsDir = path.join(fixturesDir, 'with-readme');
+
+    const config = loadConfig(docsDir, rcPath);
+    expect(config.sidebar.includeDotFolders).toBe(true);
+    expect(config.sidebar.numberedPrefix).toBe(true); // default preserved
 
     fs.rmSync(tmpDir, { recursive: true });
   });
