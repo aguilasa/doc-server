@@ -22,6 +22,8 @@ function makeConfig(
       zoomImage: true,
       pageTitle: true,
       youtubeEmbed: true,
+      downloadableAttachments: true,
+      pdfExport: true,
       ...overrides,
     },
   };
@@ -119,6 +121,29 @@ describe('generateHtml', () => {
     expect(html).not.toContain('youtube-nocookie.com/embed/');
   });
 
+  it('includes downloadable-links script when enabled', () => {
+    const html = generateHtml(makeConfig({ downloadableAttachments: true }));
+    expect(html).toContain('downloadableLinksPlugin');
+  });
+
+  it('excludes downloadable-links script when disabled', () => {
+    const html = generateHtml(makeConfig({ downloadableAttachments: false }));
+    expect(html).not.toContain('downloadableLinksPlugin');
+  });
+
+  it('includes pdf-export button and print styles when enabled', () => {
+    const html = generateHtml(makeConfig({ pdfExport: true }));
+    expect(html).toContain('doc-pdf-export-btn');
+    expect(html).toContain('window.print()');
+    expect(html).toContain('@media print');
+  });
+
+  it('excludes pdf-export button and print styles when disabled', () => {
+    const html = generateHtml(makeConfig({ pdfExport: false }));
+    expect(html).not.toContain('doc-pdf-export-btn');
+    expect(html).not.toContain('@media print');
+  });
+
   it('includes live reload WebSocket script', () => {
     const html = generateHtml(makeConfig());
     expect(html).toContain('/_ws');
@@ -155,6 +180,7 @@ describe('generateHtml', () => {
       taskLists: false, mermaid: false, mermaidViewer: false,
       copyCode: false, search: false, pagination: false,
       zoomImage: false, pageTitle: false, youtubeEmbed: false,
+      downloadableAttachments: false, pdfExport: false,
     }));
     expect(html).toContain('sidebar-resize-handle');
   });

@@ -26,6 +26,9 @@ export function generateHtml(config: DocServerConfig): string {
   const mermaidViewerJs = f.mermaidViewer ? readAsset('assets/js/mermaid-viewer.js') : '';
   const youtubeEmbedCss = f.youtubeEmbed ? readAsset('assets/css/youtube-embed.css') : '';
   const youtubeEmbedJs = f.youtubeEmbed ? readAsset('assets/js/youtube-embed.js') : '';
+  const downloadableLinksJs = f.downloadableAttachments ? readAsset('assets/js/downloadable-links.js') : '';
+  const pdfExportCss = f.pdfExport ? readAsset('assets/css/pdf-export.css') : '';
+  const pdfExportJs = f.pdfExport ? readAsset('assets/js/pdf-export.js') : '';
   const fontSizeJs = readAsset('assets/js/font-size.js');
   const sidebarResizeJs = readAsset('assets/js/sidebar-resize.js');
 
@@ -48,12 +51,17 @@ export function generateHtml(config: DocServerConfig): string {
 .sidebar-nav ul,
 .sidebar-nav li,
 .sidebar-nav p { font-size: var(--doc-font-size) !important; }
-.markdown-section { font-size: var(--doc-font-size); }</style>`);
+.markdown-section { font-size: var(--doc-font-size); }
+.markdown-section code,
+.markdown-section pre > code { font-size: calc(var(--doc-font-size) * 0.8) !important; }</style>`);
   if (f.mermaidViewer) {
     lines.push(`  <style>${mermaidViewerCss}</style>`);
   }
   if (f.youtubeEmbed) {
     lines.push(`  <style>${youtubeEmbedCss}</style>`);
+  }
+  if (f.pdfExport) {
+    lines.push(`  <style>${pdfExportCss}</style>`);
   }
   lines.push('</head>');
   lines.push('<body>');
@@ -145,6 +153,12 @@ export function generateHtml(config: DocServerConfig): string {
   }
   if (f.youtubeEmbed) {
     lines.push(`  <script>${youtubeEmbedJs}</script>`);
+  }
+  if (f.downloadableAttachments) {
+    lines.push(`  <script>${downloadableLinksJs}</script>`);
+  }
+  if (f.pdfExport) {
+    lines.push(`  <script>${pdfExportJs}</script>`);
   }
   lines.push('');
   lines.push('  <!-- Live reload -->');

@@ -20,6 +20,8 @@ describe('loadConfig', () => {
     expect(config.features.taskLists).toBe(true);
     expect(config.features.mermaid).toBe(true);
     expect(config.features.youtubeEmbed).toBe(true);
+    expect(config.features.downloadableAttachments).toBe(true);
+    expect(config.features.pdfExport).toBe(true);
   });
 
   it('picks first .md alphabetically when no README', () => {
@@ -78,6 +80,32 @@ describe('loadConfig', () => {
 
     const config = loadConfig(docsDir, rcPath);
     expect(config.features.youtubeEmbed).toBe(false);
+    expect(config.features.mermaid).toBe(true); // default preserved
+
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  it('disables downloadableAttachments via .docserverrc', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
+    const rcPath = path.join(tmpDir, '.docserverrc');
+    fs.writeFileSync(rcPath, JSON.stringify({ features: { downloadableAttachments: false } }));
+    const docsDir = path.join(fixturesDir, 'with-readme');
+
+    const config = loadConfig(docsDir, rcPath);
+    expect(config.features.downloadableAttachments).toBe(false);
+    expect(config.features.mermaid).toBe(true); // default preserved
+
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  it('disables pdfExport via .docserverrc', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
+    const rcPath = path.join(tmpDir, '.docserverrc');
+    fs.writeFileSync(rcPath, JSON.stringify({ features: { pdfExport: false } }));
+    const docsDir = path.join(fixturesDir, 'with-readme');
+
+    const config = loadConfig(docsDir, rcPath);
+    expect(config.features.pdfExport).toBe(false);
     expect(config.features.mermaid).toBe(true); // default preserved
 
     fs.rmSync(tmpDir, { recursive: true });

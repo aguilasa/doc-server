@@ -4,6 +4,11 @@
   const MAX = 32;
   const STEP = 2;
 
+  const DEFAULT_SIZE = parseInt(
+    getComputedStyle(document.documentElement).getPropertyValue('--doc-font-size').trim(),
+    10
+  ) || 16;
+
   function getCurrentSize() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -21,6 +26,11 @@
     document.documentElement.style.setProperty('--doc-font-size', clamped + 'px');
     localStorage.setItem(STORAGE_KEY, String(clamped));
     return clamped;
+  }
+
+  function resetSize() {
+    localStorage.removeItem(STORAGE_KEY);
+    document.documentElement.style.setProperty('--doc-font-size', DEFAULT_SIZE + 'px');
   }
 
   // Restore persisted value immediately to avoid flash
@@ -52,10 +62,10 @@
       'line-height:1',
     ].join(';');
 
-    function makeBtn(label, delta) {
+    function makeBtn(label, title, onClick) {
       const btn = document.createElement('button');
       btn.textContent = label;
-      btn.title = delta > 0 ? 'Increase font size' : 'Decrease font size';
+      btn.title = title;
       btn.style.cssText = [
         'background:none',
         'border:none',
@@ -68,14 +78,17 @@
       ].join(';');
       btn.addEventListener('mouseover', function () { btn.style.background = '#f0f0f0'; });
       btn.addEventListener('mouseout', function () { btn.style.background = 'none'; });
-      btn.addEventListener('click', function () {
-        applySize(getCurrentSize() + delta);
-      });
+      btn.addEventListener('click', onClick);
       return btn;
     }
 
-    bar.appendChild(makeBtn('A\u2212', -STEP));
-    bar.appendChild(makeBtn('A+', STEP));
+    bar.appendChild(makeBtn('A\u2212', 'Decrease font size', function () {
+      applySize(getCurrentSize() - STEP);
+    }));
+    bar.appendChild(makeBtn('\u21ba', 'Reset font size', resetSize));
+    bar.appendChild(makeBtn('A+', 'Increase font size', function () {
+      applySize(getCurrentSize() + STEP);
+    }));
     document.body.appendChild(bar);
   }
 

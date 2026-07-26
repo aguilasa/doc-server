@@ -21,6 +21,8 @@ export interface DocServerConfig {
     zoomImage: boolean;
     pageTitle: boolean;
     youtubeEmbed: boolean;
+    downloadableAttachments: boolean;
+    pdfExport: boolean;
   };
 }
 
@@ -84,6 +86,8 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
       zoomImage: true,
       pageTitle: true,
       youtubeEmbed: true,
+      downloadableAttachments: true,
+      pdfExport: true,
     },
   };
 
@@ -107,6 +111,8 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
       zoomImage: fileConfig.features?.zoomImage ?? defaults.features.zoomImage,
       pageTitle: fileConfig.features?.pageTitle ?? defaults.features.pageTitle,
       youtubeEmbed: fileConfig.features?.youtubeEmbed ?? defaults.features.youtubeEmbed,
+      downloadableAttachments: fileConfig.features?.downloadableAttachments ?? defaults.features.downloadableAttachments,
+      pdfExport: fileConfig.features?.pdfExport ?? defaults.features.pdfExport,
     },
   };
 

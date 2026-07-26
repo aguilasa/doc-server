@@ -1,0 +1,29 @@
+@media print {
+  .sidebar,
+  .sidebar-toggle,
+  .app-nav,
+  .github-corner,
+  #doc-font-size-controls,
+  #doc-pdf-export-btn,
+  .mermaid-viewer-overlay,
+  .search,
+  .pagination-item {
+    display: none !important;
+  }
+
+  .content {
+    left: 0 !important;
+  }
+
+  .markdown-section {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  pre,
+  table,
+  .mermaid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
