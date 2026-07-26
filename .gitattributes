@@ -1,0 +1,21 @@
+# Normaliza quebras de linha: LF no repositório e no working tree,
+# independente da configuração core.autocrlf de cada máquina.
+* text=auto eol=lf
+
+# Binários — nunca converter
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+
+# Scripts específicos de Windows precisam de CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
