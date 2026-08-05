@@ -205,9 +205,6 @@ class MermaidViewer {
     
     this.resetView()
     this.overlay.classList.add('active')
-    
-    // Adicionar botão de visualização ao SVG original
-    this.addViewerButton(svgElement)
   }
   
   close() {
@@ -361,11 +358,20 @@ class MermaidViewer {
   }
   
   addViewerButton(svgElement) {
-    // Verificar se já existe botão
-    if (svgElement.querySelector('.mermaid-viewer-btn')) return
-    
+    // O botão é anexado ao container .mermaid (ancestral do <svg>), nunca ao
+    // próprio svg — por isso a guarda tem que marcar o container. Guardar pelo
+    // svg fazia a checagem nunca casar, e cada passagem empilhava mais um
+    // botão e mais três listeners no mesmo diagrama.
+    let container = svgElement.parentElement
+    while (container && !container.classList.contains('mermaid')) {
+      container = container.parentElement
+    }
+    if (!container || container.dataset.viewerButton === '1') return
+    container.dataset.viewerButton = '1'
+
     const button = document.createElement('button')
-    button.className = 'mermaid-viewer-btn'
+    // Classe própria: '.mermaid-viewer-btn' é dos botões do header do modal.
+    button.className = 'mermaid-viewer-open-btn'
     button.textContent = '🔍 Visualizar'
     button.style.cssText = `
       position: absolute;
@@ -383,43 +389,54 @@ class MermaidViewer {
       transition: opacity 0.2s;
     `
     
-    // Encontrar o container pai do SVG
-    let container = svgElement.parentElement
-    while (container && !container.classList.contains('mermaid')) {
-      container = container.parentElement
-    }
-    
-    if (container) {
-      container.style.position = 'relative'
-      container.appendChild(button)
-      
-      // Mostrar botão no hover
-      container.addEventListener('mouseenter', () => {
-        button.style.opacity = '1'
-      })
-      
-      container.addEventListener('mouseleave', () => {
-        button.style.opacity = '0'
-      })
-      
-      // Evento de clique
-      button.addEventListener('click', () => {
-        const title = document.querySelector('h1, h2, h3')
-        const titleText = title ? title.textContent.trim() : 'Diagrama Mermaid'
-        this.open(svgElement, titleText)
-      })
-    }
+    container.style.position = 'relative'
+    container.appendChild(button)
+
+    // Mostrar botão no hover
+    container.addEventListener('mouseenter', () => {
+      button.style.opacity = '1'
+    })
+
+    container.addEventListener('mouseleave', () => {
+      button.style.opacity = '0'
+    })
+
+    // Evento de clique
+    button.addEventListener('click', () => {
+      const title = document.querySelector('h1, h2, h3')
+      const titleText = title ? title.textContent.trim() : 'Diagrama Mermaid'
+      this.open(svgElement, titleText)
+    })
   }
 }
 
 // Inicializar o viewer quando o documento estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
   window.mermaidViewer = new MermaidViewer()
-  
-  // Adicionar botões a todos os SVGs existentes
-  setTimeout(() => {
-    document.querySelectorAll('.mermaid svg').forEach(svg => {
-      window.mermaidViewer.addViewerButton(svg)
-    })
-  }, 500)
+
+  function attachAll() {
+    try {
+      document.querySelectorAll('.mermaid svg').forEach(svg => {
+        window.mermaidViewer.addViewerButton(svg)
+      })
+    } catch (err) {
+      console.warn('[doc-server:mermaid-viewer]', err)
+    }
+  }
+
+  // O mermaid renderiza os SVGs de forma assíncrona e o Docsify troca o
+  // conteúdo a cada navegação — não existe um instante único em que dê para
+  // varrer uma vez só. Um observer estrangulado cobre os dois casos, e como
+  // addViewerButton é idempotente, repassar por diagramas já tratados é livre.
+  let pending = null
+  const observer = new MutationObserver(() => {
+    if (pending) return
+    pending = setTimeout(() => {
+      pending = null
+      attachAll()
+    }, 100)
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
+
+  attachAll()
 })
