@@ -43,6 +43,22 @@ function getMimeType(filepath: string): string {
   return MIME_TYPES[ext] ?? 'application/octet-stream';
 }
 
+/**
+ * Verdadeiro quando `target` está dentro de `baseDir`, ou é o próprio.
+ *
+ * Comparar prefixo de string não serve: '/docs-privado' começa com '/docs' e
+ * passaria. Comparar o caminho relativo resolve — ele só começa com '..' (ou
+ * vira absoluto, no caso de outro drive no Windows) quando de fato escapa.
+ * Um arquivo legitimamente chamado '..oculto' continua aceito por causa da
+ * comparação com o separador.
+ */
+function isInsideDir(baseDir: string, target: string): boolean {
+  const rel = path.relative(baseDir, target);
+  if (rel === '') return true;
+  if (path.isAbsolute(rel)) return false;
+  return rel !== '..' && !rel.startsWith('..' + path.sep);
+}
+
 function serveDirectoryIndex(dirPath: string, res: http.ServerResponse): void {
   const readmePath = path.join(dirPath, 'README.md');
   fs.readFile(readmePath, (err, data) => {
@@ -116,6 +132,18 @@ export function startServer(
   let sidebarContent = generateSidebar(docsDir, config.sidebar);
   const htmlContent = generateHtml(config);
 
+  // Raiz canônica para toda checagem de contenção. Resolvida por realpath
+  // porque o próprio docsDir pode ser um symlink — sem isso, o realpath de
+  // qualquer arquivo servido nunca casaria com a base.
+  let docsRoot: string;
+  try {
+    docsRoot = fs.realpathSync(path.resolve(docsDir));
+  } catch {
+    // Pasta inexistente ou inacessível: o resto do servidor já degrada para
+    // sidebar vazia e 404, então basta não escapar do caminho léxico.
+    docsRoot = path.resolve(docsDir);
+  }
+
   // Socket → respondeu ao último ping. Ver HEARTBEAT_MS.
   const clients = new Map<WebSocket, boolean>();
 
@@ -127,14 +155,14 @@ export function startServer(
         if (err.code === 'ENOENT' && target.endsWith('.md')) {
           // Docsify appends .md to paths without trailing slash (e.g. /subdir → /subdir.md).
           // If the path without .md is a directory, serve its index instead.
-          const possibleDir = target.slice(0, -3);
-          if (
-            path.resolve(possibleDir).startsWith(path.resolve(docsDir)) &&
-            fs.existsSync(possibleDir) &&
-            fs.statSync(possibleDir).isDirectory()
-          ) {
-            serveDirectoryIndex(possibleDir, res);
-            return;
+          try {
+            const realDir = fs.realpathSync(target.slice(0, -3));
+            if (isInsideDir(docsRoot, realDir) && fs.statSync(realDir).isDirectory()) {
+              serveDirectoryIndex(realDir, res);
+              return;
+            }
+          } catch {
+            // Não existe ou não é acessível — cai no 404 abaixo.
           }
         }
         res.writeHead(404);
@@ -183,17 +211,41 @@ export function startServer(
     }
 
     // Static file serving
-    const filePath = path.join(docsDir, decodeURIComponent(urlPath));
+    let decodedPath: string;
+    try {
+      decodedPath = decodeURIComponent(urlPath);
+    } catch {
+      // Percent-encoding malformado (ex.: '/%'): decodeURIComponent lança
+      // URIError, e a exceção derrubaria o handler da requisição.
+      res.writeHead(400);
+      res.end('Bad Request');
+      return;
+    }
 
-    // Security: ensure path stays within docsDir
-    const resolved = path.resolve(filePath);
-    if (!resolved.startsWith(path.resolve(docsDir))) {
+    // Segurança, primeira barreira: '..' no caminho, resolvido lexicamente.
+    const requested = path.resolve(path.join(docsRoot, decodedPath));
+    if (!isInsideDir(docsRoot, requested)) {
       res.writeHead(403);
       res.end('Forbidden');
       return;
     }
 
-    serveStaticFile(resolved, res);
+    // Segunda barreira: path.resolve não segue symlink, então um link dentro
+    // de docsDir apontando para fora ainda escaparia. Quando o caminho não
+    // existe, realpath falha e seguimos com o léxico — é o fluxo de 404 e do
+    // fallback de '/subdir.md', ambos já contidos pela checagem acima.
+    fs.realpath(requested, (realErr, realPath) => {
+      if (realErr) {
+        serveStaticFile(requested, res);
+        return;
+      }
+      if (!isInsideDir(docsRoot, realPath)) {
+        res.writeHead(403);
+        res.end('Forbidden');
+        return;
+      }
+      serveStaticFile(realPath, res);
+    });
   });
 
   // WebSocket server on the same HTTP server, path /_ws
