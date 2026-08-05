@@ -82,7 +82,26 @@ async function main(): Promise<void> {
   });
 
   const port = await findAvailablePort(config.port);
-  startServer(docsDir, config, port);
+  const { port: boundPort, stop } = await startServer(docsDir, config, port);
+
+  console.log(`Documentação disponível em http://localhost:${boundPort}`);
+
+  // Encerramento limpo: fecha sockets, watcher e servidor antes de sair.
+  let shuttingDown = false;
+  const shutdown = (): void => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    stop().then(
+      () => process.exit(0),
+      err => {
+        console.error(err);
+        process.exit(1);
+      }
+    );
+  };
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
 main().catch(err => {
