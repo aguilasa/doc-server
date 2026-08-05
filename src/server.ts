@@ -174,7 +174,16 @@ export function startServer(docsDir: string, config: DocServerConfig, port: numb
   const watcher = chokidar.watch(docsDir, {
     persistent: true,
     ignoreInitial: true,
-    ignored: (watchedPath: string) => {
+    // Never follow symlinks: they can point at device nodes, sockets or
+    // unreadable paths outside docsDir (e.g. a Wine prefix's dosdevices/com1).
+    followSymlinks: false,
+    ignored: (watchedPath: string, stats?: fs.Stats) => {
+      // Only directories and .md files are ever worth watching. Anything else
+      // (binaries, device nodes, sockets, FIFOs) is skipped before chokidar
+      // tries to open a watch descriptor on it.
+      if (stats && !stats.isDirectory() && !watchedPath.endsWith('.md')) {
+        return true;
+      }
       const rel = path.relative(docsDir, watchedPath).replace(/\\/g, '/');
       if (!rel || rel.startsWith('..')) return false;
       return rel.split('/').some(segment =>
@@ -183,6 +192,14 @@ export function startServer(docsDir: string, config: DocServerConfig, port: numb
         (!config.sidebar.includeDotFolders && segment.startsWith('.'))
       );
     },
+  });
+
+  // An unhandled 'error' event on an EventEmitter crashes the process. A single
+  // unwatchable path (permissions, device node, too many open files) must not
+  // take the whole server down — warn and keep serving.
+  watcher.on('error', (err: unknown) => {
+    const e = err as NodeJS.ErrnoException;
+    console.warn(`Aviso: não foi possível observar ${e.path ?? '?'} (${e.code ?? e.message})`);
   });
 
   function onMdChange(filePath: string): void {
