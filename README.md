@@ -72,7 +72,7 @@ Serving the root of a repository pulls in every `README.md` it contains — vend
 | Field | Default | Description |
 | --- | --- | --- |
 | `exclude` | `[]` | Globs, anchored at the served folder, of what to leave out |
-| `respectGitignore` | `false` | Also leave out whatever the root `.gitignore` ignores |
+| `respectGitignore` | `false` | Also leave out whatever the root `.gitignore` ignores — **and refuse to serve it** |
 
 ```json
 { "exclude": ["tools/**", "vendor/**"], "respectGitignore": true }
@@ -80,9 +80,21 @@ Serving the root of a repository pulls in every `README.md` it contains — vend
 
 In a glob, `**` crosses `/` while `*` and `?` stop at it, and naming a folder takes everything under it. `tools/**` matches `tools/wla-dx/README.md` and does **not** match `my-tools/x.md`; write `**/build/**` when you want any depth.
 
-Excluded files are still served over HTTP — a link pointing at one still works. They only disappear from the generated navigation and from live reload.
+The two fields differ in reach, and the difference is deliberate:
+
+- **`exclude` hides navigation, not access.** An excluded file is still served over HTTP — a link pointing at one still works. It only disappears from the generated sidebar and from live reload.
+- **`respectGitignore` also refuses to serve.** An ignored file is not in the repository, so GitHub does not serve it either; a request for one answers `404`. Turning it on when you serve a repository root is what keeps `node_modules/`, build output and gitignored secrets off the wire.
 
 `respectGitignore` reads the `.gitignore` of the served folder only, and supports comments, blank lines, `!` negation, `/` anchoring, patterns without a slash matching at any depth, and `*`/`**`/`?`. Nested `.gitignore` files are not read, and a trailing `/` does not restrict a pattern to folders (`build/` behaves like `build`).
+
+### Serving a repository root
+
+Two rules apply whatever the configuration says:
+
+- **The server listens on `127.0.0.1` only.** It is a local documentation server; nothing on the network can reach it.
+- **`.git/` is never served.** No configuration turns it back on. A repository's `.git` holds the full history and, in some setups, credentials in the remote URL of `.git/config`.
+
+Anything else under the served root is readable over HTTP unless `respectGitignore` keeps it out — so when the served folder is a repository root, turn `respectGitignore` on.
 
 ### Link resolution — `relativePath`
 
