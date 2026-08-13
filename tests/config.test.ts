@@ -162,6 +162,25 @@ describe('loadConfig', () => {
     fs.rmSync(tmpDir, { recursive: true });
   });
 
+  it('relativePath defaults to false, preserving root-anchored link resolution', () => {
+    const docsDir = path.join(fixturesDir, 'with-readme');
+    const config = loadConfig(docsDir, '/nonexistent/.docserverrc');
+    expect(config.relativePath).toBe(false);
+  });
+
+  it('enables relativePath via .docserverrc', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
+    const rcPath = path.join(tmpDir, '.docserverrc');
+    fs.writeFileSync(rcPath, JSON.stringify({ relativePath: true }));
+    const docsDir = path.join(fixturesDir, 'with-readme');
+
+    const config = loadConfig(docsDir, rcPath);
+    expect(config.relativePath).toBe(true);
+    expect(config.respectGitignore).toBe(false); // default preserved
+
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
   it('githubSlugs defaults to false, unlike every other feature', () => {
     const docsDir = path.join(fixturesDir, 'with-readme');
     const config = loadConfig(docsDir, '/nonexistent/.docserverrc');

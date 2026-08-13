@@ -12,8 +12,8 @@ describe('generateSidebar', () => {
   it('generates sidebar for simple folder (no README)', () => {
     const docsDir = path.join(fixturesDir, 'simple');
     const result = generateSidebar(docsDir, defaultOpts);
-    expect(result).toContain('[Getting Started Guide](guide.md)');
-    expect(result).toContain('[Introduction](intro.md)');
+    expect(result).toContain('[Getting Started Guide](/guide.md)');
+    expect(result).toContain('[Introduction](/intro.md)');
     // guide.md comes before intro.md alphabetically
     expect(result.indexOf('guide.md')).toBeLessThan(result.indexOf('intro.md'));
   });
@@ -21,8 +21,17 @@ describe('generateSidebar', () => {
   it('puts README.md first', () => {
     const docsDir = path.join(fixturesDir, 'with-readme');
     const result = generateSidebar(docsDir, defaultOpts);
-    expect(result).toContain('[Home](README.md)');
+    expect(result).toContain('[Home](/README.md)');
     expect(result.indexOf('README.md')).toBeLessThan(result.indexOf('about.md'));
+  });
+
+  it('writes every href from the served root, the one form both relativePath modes resolve', () => {
+    const docsDir = path.join(fixturesDir, 'with-subdirs');
+
+    const result = generateSidebar(docsDir, defaultOpts);
+
+    expect(result).toContain('](/guide/quickstart.md)');
+    expect(result).not.toContain('](guide/quickstart.md)');
   });
 
   it('orders numbered prefix files numerically', () => {

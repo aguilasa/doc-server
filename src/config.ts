@@ -13,6 +13,12 @@ export interface DocServerConfig {
   exclude: string[];
   /** Quando ligado, o `.gitignore` da raiz exclui junto com `exclude`. */
   respectGitignore: boolean;
+  /**
+   * Repassado ao docsify. Com `false` (default), todo link sem barra inicial é
+   * ancorado na raiz servida; com `true`, é resolvido a partir do arquivo que o
+   * contém — a convenção do GitHub.
+   */
+  relativePath: boolean;
   sidebar: {
     numberedPrefix: boolean;
     collapsedSections: boolean;
@@ -41,6 +47,7 @@ export type PartialConfig = Partial<{
   fontSize: number;
   exclude: string[];
   respectGitignore: boolean;
+  relativePath: boolean;
   sidebar: Partial<DocServerConfig['sidebar']>;
   features: Partial<DocServerConfig['features']>;
 }>;
@@ -83,6 +90,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
     fontSize: 16,
     exclude: [],
     respectGitignore: false,
+    relativePath: false,
     sidebar: {
       numberedPrefix: true,
       collapsedSections: true,
@@ -115,6 +123,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
       ? fileConfig.exclude.filter(pattern => typeof pattern === 'string')
       : defaults.exclude,
     respectGitignore: fileConfig.respectGitignore ?? defaults.respectGitignore,
+    relativePath: fileConfig.relativePath ?? defaults.relativePath,
     sidebar: {
       numberedPrefix: fileConfig.sidebar?.numberedPrefix ?? defaults.sidebar.numberedPrefix,
       collapsedSections: fileConfig.sidebar?.collapsedSections ?? defaults.sidebar.collapsedSections,

@@ -46,6 +46,7 @@ Create a `.docserverrc` in the directory where you run the command (or pass the 
   "homepage": "README.md",
   "exclude": ["tools/**", "vendor/**"],
   "respectGitignore": false,
+  "relativePath": false,
   "sidebar": {
     "numberedPrefix": true,
     "collapsedSections": true
@@ -82,6 +83,21 @@ In a glob, `**` crosses `/` while `*` and `?` stop at it, and naming a folder ta
 Excluded files are still served over HTTP — a link pointing at one still works. They only disappear from the generated navigation and from live reload.
 
 `respectGitignore` reads the `.gitignore` of the served folder only, and supports comments, blank lines, `!` negation, `/` anchoring, patterns without a slash matching at any depth, and `*`/`**`/`?`. Nested `.gitignore` files are not read, and a trailing `/` does not restrict a pattern to folders (`build/` behaves like `build`).
+
+### Link resolution — `relativePath`
+
+GitHub accepts two link conventions; docsify only does one of them at a time.
+
+| Written in | Link | `relativePath: false` (default) | `relativePath: true` |
+| --- | --- | --- | --- |
+| `/README.md` | `docs/PLANO.md` | works | works |
+| `/docs/PLANO.md` | `EQUIVALENCIA.md` | **404** | works |
+| `/docs/deep/NOTA.md` | `../VIZINHO.md` | **404** | works |
+| `/docs/PLANO.md` | `/docs/EQUIVALENCIA.md` | works | works |
+
+With `false`, every path without a leading slash is anchored at the served folder. With `true`, it is resolved from the file that contains it — what GitHub does. A link that starts with `/` resolves the same in both modes, so it is the portable form.
+
+**Use `"relativePath": true`** for documentation that is also read on GitHub: the same files then work in both places, whichever style the links use. **Keep the default `false`** for documentation that only lives in doc-server — turning it on changes how every existing link resolves.
 
 ---
 

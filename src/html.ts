@@ -73,6 +73,7 @@ export function generateHtml(config: DocServerConfig): string {
   lines.push(`      name: '${safeName}',`);
   lines.push("      repo: '',");
   lines.push('      loadSidebar: true,');
+  lines.push(`      relativePath: ${config.relativePath},`);
   lines.push('      loadNavbar: false,');
   lines.push('      maxLevel: 4,');
   lines.push('      subMaxLevel: 3,');

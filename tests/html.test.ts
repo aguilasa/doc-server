@@ -5,6 +5,7 @@ import type { DocServerConfig } from '../src/config.js';
 function makeConfig(
   overrides: Partial<DocServerConfig['features']> = {},
   fontSize = 16,
+  relativePath = false,
 ): DocServerConfig {
   return {
     name: 'Test Docs',
@@ -13,6 +14,7 @@ function makeConfig(
     fontSize,
     exclude: [],
     respectGitignore: false,
+    relativePath,
     sidebar: { numberedPrefix: true, collapsedSections: true, includeDotFolders: false },
     features: {
       taskLists: true,
@@ -171,6 +173,16 @@ describe('generateHtml', () => {
   it('contains --doc-font-size: 20px when fontSize is 20', () => {
     const html = generateHtml(makeConfig({}, 20));
     expect(html).toContain('--doc-font-size: 20px');
+  });
+
+  it('tells docsify to anchor every path at the served root by default', () => {
+    const html = generateHtml(makeConfig());
+    expect(html).toContain('relativePath: false');
+  });
+
+  it('tells docsify to resolve paths from the current file when relativePath is on', () => {
+    const html = generateHtml(makeConfig({}, 16, true));
+    expect(html).toContain('relativePath: true');
   });
 
   it('excludes the GitHub slug plugin by default', () => {

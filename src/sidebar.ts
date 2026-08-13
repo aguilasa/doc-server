@@ -90,7 +90,11 @@ function buildSection(
     const relPath = toRelPath(docsDir, fullPath);
     const encodedPath = relPath.split('/').map(s => encodeURIComponent(s)).join('/');
     const title = getTitleFromFile(fullPath);
-    lines.push(`${indent}* [${title}](${encodedPath})`);
+    // Barra inicial de propósito: é o único formato que o docsify resolve igual
+    // com `relativePath` ligado e desligado. Sem ela, a sidebar vista de dentro
+    // de uma subpasta apontaria para '/docs/docs/PLANO.md' quando a opção está
+    // ligada. Ver docs/paridade-com-github.md §7.
+    lines.push(`${indent}* [${title}](/${encodedPath})`);
   }
 
   for (const subdir of subdirs) {

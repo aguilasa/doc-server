@@ -74,7 +74,7 @@ describe('startServer routes', () => {
 
     expect(res.status).toBe(200);
     expect(res.contentType).toContain('text/markdown');
-    expect(res.body).toContain('[Docs Home](README.md)');
+    expect(res.body).toContain('[Docs Home](/README.md)');
   });
 
   it('never writes the generated files into docsDir', async () => {
