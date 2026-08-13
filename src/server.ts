@@ -6,10 +6,15 @@ import chokidar from 'chokidar';
 import { DocServerConfig } from './config.js';
 import { generateSidebar } from './sidebar.js';
 import { generateHtml } from './html.js';
-import { createExcludeFilter } from './exclude.js';
+import { createExcludeFilter, createServeFilter, ExcludeFilter } from './exclude.js';
 
 const WS_PATH = '/_ws';
 const SIDEBAR_ROUTE = '/_sidebar.md';
+
+// Servidor de documentação local. Vincular a 0.0.0.0 publicaria a pasta na rede
+// inteira — e o caso que dá paridade de link com o GitHub é justamente servir a
+// raiz de um repositório, com todo o código e o histórico dentro dela.
+const HOST = '127.0.0.1';
 
 // Intervalo entre pings. Socket que não responde ao ping anterior é dado como
 // morto e removido — sem isso, conexão meio-aberta (notebook suspenso, Wi-Fi
@@ -98,10 +103,14 @@ function isInsideDir(baseDir: string, target: string): boolean {
   return rel !== '..' && !rel.startsWith('..' + path.sep);
 }
 
-function serveDirectoryIndex(dirPath: string, res: http.ServerResponse): void {
+function serveDirectoryIndex(
+  dirPath: string,
+  res: http.ServerResponse,
+  isServable: (filePath: string) => boolean
+): void {
   const readmePath = path.join(dirPath, 'README.md');
   fs.readFile(readmePath, (err, data) => {
-    if (!err) {
+    if (!err && isServable(readmePath)) {
       res.writeHead(200, { 'Content-Type': getMimeType(readmePath) });
       res.end(data);
       return;
@@ -111,6 +120,7 @@ function serveDirectoryIndex(dirPath: string, res: http.ServerResponse): void {
     try {
       files = fs.readdirSync(dirPath)
         .filter(f => f.endsWith('.md'))
+        .filter(f => isServable(path.join(dirPath, f)))
         .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     } catch {
       files = [];
@@ -140,7 +150,7 @@ function isPortAvailable(port: number): Promise<boolean> {
     tester.once('listening', () => {
       tester.close(() => resolve(true));
     });
-    tester.listen(port, '127.0.0.1');
+    tester.listen(port, HOST);
   });
 }
 
@@ -174,6 +184,11 @@ export function startServer(
   });
   const sidebarOptions = { ...config.sidebar, isExcluded };
 
+  // Filtro separado, e não o mesmo: `exclude` tira da navegação, não do acesso.
+  const isUnservable = createServeFilter(docsDir, {
+    respectGitignore: config.respectGitignore,
+  });
+
   let sidebarContent = generateSidebar(docsDir, sidebarOptions);
   const htmlContent = generateHtml(config);
 
@@ -192,7 +207,25 @@ export function startServer(
   // Socket → respondeu ao último ping. Ver HEARTBEAT_MS.
   const clients = new Map<WebSocket, boolean>();
 
+  /**
+   * O caminho absoluto já contido em `docsRoot` pode ser lido por HTTP.
+   * Caminho fora da raiz nunca chega aqui — a contenção responde 403 antes.
+   */
+  function isServable(target: string): boolean {
+    const rel = path.relative(docsRoot, target).replace(/\\/g, '/');
+    if (rel === '') return true;
+    return !isUnservable(rel);
+  }
+
   function serveStaticFile(target: string, res: http.ServerResponse): void {
+    // 404 e não 403: o arquivo não está no repositório, e é isso que o GitHub
+    // responde para ele. Também não confirma que existe em disco.
+    if (!isServable(target)) {
+      res.writeHead(404);
+      res.end('Not Found');
+      return;
+    }
+
     // Stream em vez de fs.readFile: um PDF de anexo grande não precisa caber
     // inteiro em memória a cada requisição.
     fs.stat(target, (err, stats) => {
@@ -202,8 +235,12 @@ export function startServer(
           // If the path without .md is a directory, serve its index instead.
           try {
             const realDir = fs.realpathSync(target.slice(0, -3));
-            if (isInsideDir(docsRoot, realDir) && fs.statSync(realDir).isDirectory()) {
-              serveDirectoryIndex(realDir, res);
+            if (
+              isInsideDir(docsRoot, realDir) &&
+              isServable(realDir) &&
+              fs.statSync(realDir).isDirectory()
+            ) {
+              serveDirectoryIndex(realDir, res, isServable);
               return;
             }
           } catch {
@@ -216,7 +253,7 @@ export function startServer(
       }
 
       if (stats.isDirectory()) {
-        serveDirectoryIndex(target, res);
+        serveDirectoryIndex(target, res, isServable);
         return;
       }
 
@@ -397,7 +434,7 @@ export function startServer(
   }
 
   return new Promise<RunningServer>(resolve => {
-    server.listen(port, () => {
+    server.listen(port, HOST, () => {
       const address = server.address();
       // address() só devolve string para socket unix, que não usamos aqui.
       const boundPort = typeof address === 'object' && address !== null ? address.port : port;

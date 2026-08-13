@@ -21,9 +21,14 @@ interface RawResponse {
  * tornaria impossível exercitar path traversal — `http.request` manda o path
  * exatamente como escrito.
  */
-function request(port: number, urlPath: string, method = 'GET'): Promise<RawResponse> {
+function request(
+  port: number,
+  urlPath: string,
+  method = 'GET',
+  host = '127.0.0.1'
+): Promise<RawResponse> {
   return new Promise((resolve, reject) => {
-    const req = http.request({ host: '127.0.0.1', port, path: urlPath, method }, res => {
+    const req = http.request({ host, port, path: urlPath, method }, res => {
       const chunks: Buffer[] = [];
       res.on('data', chunk => chunks.push(chunk as Buffer));
       res.on('end', () =>
@@ -40,8 +45,15 @@ function request(port: number, urlPath: string, method = 'GET'): Promise<RawResp
 }
 
 /** Porta 0: o SO escolhe uma livre, então os arquivos de teste não colidem. */
-function serve(docsDir: string): Promise<RunningServer> {
-  return startServer(docsDir, loadConfig(docsDir, '/nonexistent/.docserverrc'), 0);
+function serve(docsDir: string, rcPath = '/nonexistent/.docserverrc'): Promise<RunningServer> {
+  return startServer(docsDir, loadConfig(docsDir, rcPath), 0);
+}
+
+/** Escreve um `.docserverrc` fora da árvore servida e devolve o caminho. */
+function writeConfig(config: object): string {
+  const rcPath = path.join(makeTempDir(), '.docserverrc');
+  fs.writeFileSync(rcPath, JSON.stringify(config));
+  return rcPath;
 }
 
 function delay(ms: number): Promise<void> {
@@ -232,6 +244,127 @@ describe('startServer path containment', () => {
 
     const res = await request(server.port, '/README.md');
     expect(res.status).toBe(200);
+  });
+});
+
+/**
+ * O endereço IPv4 não-loopback da máquina, quando existe. É por ele que um
+ * `listen` sem host aceitaria conexão da rede inteira.
+ */
+const lanAddress = Object.values(os.networkInterfaces())
+  .flat()
+  .find(iface => iface !== undefined && iface.family === 'IPv4' && !iface.internal)
+  ?.address;
+
+describe('startServer network exposure', () => {
+  let server: RunningServer;
+
+  beforeAll(async () => {
+    server = await serve(path.join(fixturesDir, 'with-subdirs'));
+  });
+
+  afterAll(() => server.stop());
+
+  it('accepts connections on the loopback interface', async () => {
+    const res = await request(server.port, '/README.md');
+
+    expect(res.status).toBe(200);
+  });
+
+  it.skipIf(lanAddress === undefined)(
+    'refuses connections addressed to the machine on the local network',
+    async () => {
+      await expect(
+        request(server.port, '/README.md', 'GET', lanAddress)
+      ).rejects.toThrow();
+    }
+  );
+});
+
+describe('startServer unservable paths', () => {
+  let root: string;
+  let defaultServer: RunningServer;
+  let gitignoreServer: RunningServer;
+  let excludeServer: RunningServer;
+
+  beforeAll(async () => {
+    root = makeTempDir();
+    fs.mkdirSync(path.join(root, '.git'), { recursive: true });
+    fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
+    fs.mkdirSync(path.join(root, 'tools'), { recursive: true });
+
+    fs.writeFileSync(path.join(root, 'README.md'), '# Home\n');
+    fs.writeFileSync(path.join(root, '.git', 'config'), 'SEGREDO-GIT\n');
+    fs.writeFileSync(path.join(root, '.git', 'HEAD'), 'ref: refs/heads/main\n');
+    fs.writeFileSync(path.join(root, '.gitignore'), 'dist/\nsegredo.md\n');
+    fs.writeFileSync(path.join(root, 'segredo.md'), 'SEGREDO-IGNORADO\n');
+    fs.writeFileSync(path.join(root, 'dist', 'build.md'), 'SEGREDO-DIST\n');
+    fs.writeFileSync(path.join(root, 'tools', 'vendored.md'), '# Vendored\n');
+
+    defaultServer = await serve(root);
+    gitignoreServer = await serve(root, writeConfig({ respectGitignore: true }));
+    excludeServer = await serve(root, writeConfig({ exclude: ['tools/**'] }));
+  });
+
+  afterAll(async () => {
+    await Promise.all([defaultServer.stop(), gitignoreServer.stop(), excludeServer.stop()]);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it('never serves .git, even with respectGitignore off', async () => {
+    const res = await request(defaultServer.port, '/.git/config');
+
+    expect(res.status).toBe(404);
+    expect(res.body).not.toContain('SEGREDO-GIT');
+  });
+
+  it('never serves .git with respectGitignore on either', async () => {
+    const res = await request(gitignoreServer.port, '/.git/HEAD');
+
+    expect(res.status).toBe(404);
+    expect(res.body).not.toContain('refs/heads/main');
+  });
+
+  it('does not reach .git through the /subdir.md directory-index detour', async () => {
+    const res = await request(defaultServer.port, '/.git.md');
+
+    expect(res.status).toBe(404);
+    expect(res.body).not.toContain('SEGREDO-GIT');
+  });
+
+  it('refuses a gitignored file when respectGitignore is on', async () => {
+    const res = await request(gitignoreServer.port, '/segredo.md');
+
+    expect(res.status).toBe(404);
+    expect(res.body).not.toContain('SEGREDO-IGNORADO');
+  });
+
+  it('refuses everything under a gitignored folder when respectGitignore is on', async () => {
+    const res = await request(gitignoreServer.port, '/dist/build.md');
+
+    expect(res.status).toBe(404);
+    expect(res.body).not.toContain('SEGREDO-DIST');
+  });
+
+  it('still serves a gitignored file when respectGitignore is off', async () => {
+    const res = await request(defaultServer.port, '/segredo.md');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toContain('SEGREDO-IGNORADO');
+  });
+
+  it('still resolves a link into an excluded folder — exclude hides navigation, not access', async () => {
+    const res = await request(excludeServer.port, '/tools/vendored.md');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toContain('# Vendored');
+  });
+
+  it('keeps serving normal files with respectGitignore on', async () => {
+    const res = await request(gitignoreServer.port, '/README.md');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toContain('# Home');
   });
 });
 

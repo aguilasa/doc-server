@@ -22,10 +22,17 @@ export interface ExcludeOptions {
   readonly respectGitignore: boolean;
 }
 
+export interface ServeOptions {
+  /** Quando ligado, o que o `.gitignore` da raiz cobre também não é servido. */
+  readonly respectGitignore: boolean;
+}
+
 /** Verdadeiro quando a entry fica de fora. */
 export type ExcludeFilter = (relPath: string) => boolean;
 
 const GITIGNORE_FILE = '.gitignore';
+
+const GIT_DIR = '.git';
 
 const EXCLUDES_NOTHING: ExcludeFilter = () => false;
 
@@ -38,6 +45,38 @@ export function createExcludeFilter(rootDir: string, opts: ExcludeOptions): Excl
   if (rules.length === 0) return EXCLUDES_NOTHING;
 
   return relPath => isExcluded(rules, relPath);
+}
+
+/**
+ * Decide o que a rota estática **recusa**. Verdadeiro quando o caminho não é
+ * servível.
+ *
+ * Difere do filtro da sidebar em duas coisas, e as duas são deliberadas:
+ *
+ * - **`exclude` não entra aqui.** Ele significa "não navegue para isto", não
+ *   "não sirva isto": um link para um arquivo excluído continua resolvendo.
+ * - **`.git/` nunca é servível**, com ou sem configuração. Servir a raiz de um
+ *   repositório — que é o que dá paridade de link com o GitHub — deixaria o
+ *   histórico inteiro e a URL de remote do `.git/config` legíveis por HTTP.
+ *
+ * `respectGitignore` vale aqui pelo que ele já significa: arquivo ignorado não
+ * está no repositório, logo o GitHub também não o serve.
+ */
+export function createServeFilter(rootDir: string, opts: ServeOptions): ExcludeFilter {
+  const configured = createExcludeFilter(rootDir, {
+    exclude: [],
+    respectGitignore: opts.respectGitignore,
+  });
+  return relPath => isInsideGitDir(relPath) || configured(relPath);
+}
+
+/**
+ * A pasta `.git` e tudo abaixo dela. Avaliada fora do casador de padrões de
+ * propósito: ali o último padrão que casa vence, e um `!` no `.gitignore`
+ * poderia reabrir o que esta regra fecha.
+ */
+function isInsideGitDir(relPath: string): boolean {
+  return relPath === GIT_DIR || relPath.startsWith(GIT_DIR + '/');
 }
 
 /**
