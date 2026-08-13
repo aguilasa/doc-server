@@ -6,6 +6,7 @@ import chokidar from 'chokidar';
 import { DocServerConfig } from './config.js';
 import { generateSidebar } from './sidebar.js';
 import { generateHtml } from './html.js';
+import { createExcludeFilter } from './exclude.js';
 
 const WS_PATH = '/_ws';
 const SIDEBAR_ROUTE = '/_sidebar.md';
@@ -129,7 +130,13 @@ export function startServer(
   config: DocServerConfig,
   port: number
 ): Promise<RunningServer> {
-  let sidebarContent = generateSidebar(docsDir, config.sidebar);
+  const isExcluded = createExcludeFilter(docsDir, {
+    exclude: config.exclude,
+    respectGitignore: config.respectGitignore,
+  });
+  const sidebarOptions = { ...config.sidebar, isExcluded };
+
+  let sidebarContent = generateSidebar(docsDir, sidebarOptions);
   const htmlContent = generateHtml(config);
 
   // Raiz canônica para toda checagem de contenção. Resolvida por realpath
@@ -306,6 +313,7 @@ export function startServer(
       }
       const rel = path.relative(docsDir, watchedPath).replace(/\\/g, '/');
       if (!rel || rel.startsWith('..')) return false;
+      if (isExcluded(rel)) return true;
       return rel.split('/').some(segment =>
         segment === '.ignore' ||
         segment.startsWith('_') ||
@@ -329,7 +337,7 @@ export function startServer(
     if (reloadTimer) clearTimeout(reloadTimer);
     reloadTimer = setTimeout(() => {
       reloadTimer = undefined;
-      sidebarContent = generateSidebar(docsDir, config.sidebar);
+      sidebarContent = generateSidebar(docsDir, sidebarOptions);
       broadcast({ type: 'reload' });
     }, RELOAD_DEBOUNCE_MS);
   }

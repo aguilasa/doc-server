@@ -129,6 +129,39 @@ describe('loadConfig', () => {
     fs.rmSync(tmpDir, { recursive: true });
   });
 
+  it('exclude defaults to an empty list and respectGitignore to false', () => {
+    const docsDir = path.join(fixturesDir, 'with-readme');
+    const config = loadConfig(docsDir, '/nonexistent/.docserverrc');
+    expect(config.exclude).toEqual([]);
+    expect(config.respectGitignore).toBe(false);
+  });
+
+  it('reads exclude and respectGitignore from .docserverrc', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
+    const rcPath = path.join(tmpDir, '.docserverrc');
+    fs.writeFileSync(rcPath, JSON.stringify({ exclude: ['tools/**'], respectGitignore: true }));
+    const docsDir = path.join(fixturesDir, 'with-readme');
+
+    const config = loadConfig(docsDir, rcPath);
+    expect(config.exclude).toEqual(['tools/**']);
+    expect(config.respectGitignore).toBe(true);
+    expect(config.sidebar.numberedPrefix).toBe(true); // default preserved
+
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  it('falls back to no exclusion when exclude is not a list of strings', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
+    const rcPath = path.join(tmpDir, '.docserverrc');
+    fs.writeFileSync(rcPath, JSON.stringify({ exclude: 'tools/**' }));
+    const docsDir = path.join(fixturesDir, 'with-readme');
+
+    const config = loadConfig(docsDir, rcPath);
+    expect(config.exclude).toEqual([]);
+
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
   it('CLI flags override .docserverrc', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
     const rcPath = path.join(tmpDir, '.docserverrc');

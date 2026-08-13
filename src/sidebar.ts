@@ -1,11 +1,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { getTitleFromFile } from './title.js';
+import { ExcludeFilter } from './exclude.js';
 
 export interface SidebarOptions {
   numberedPrefix: boolean;
   collapsedSections: boolean;
   includeDotFolders: boolean;
+  /** Ausente = nada é excluído além das pastas `.ignore`, `_*` e `.*`. */
+  isExcluded?: ExcludeFilter;
 }
 
 function humanizeDir(name: string): string {
@@ -37,10 +40,22 @@ function sortMdFiles(files: string[], numberedPrefix: boolean): string[] {
   return [...readme, ...rest];
 }
 
+/** Opções com a ausência já resolvida, para o recursivo não repetir o default. */
+interface ResolvedOptions {
+  readonly numberedPrefix: boolean;
+  readonly includeDotFolders: boolean;
+  readonly isExcluded: ExcludeFilter;
+}
+
+/** Caminho relativo à raiz, em POSIX — é a forma que o filtro de exclusão espera. */
+function toRelPath(docsDir: string, fullPath: string): string {
+  return path.relative(docsDir, fullPath).replace(/\\/g, '/');
+}
+
 function buildSection(
   dirPath: string,
   docsDir: string,
-  opts: SidebarOptions,
+  opts: ResolvedOptions,
   indent: string
 ): string {
   let items: fs.Dirent[];
@@ -52,7 +67,8 @@ function buildSection(
 
   const mdFiles = items
     .filter(i => i.isFile() && i.name.endsWith('.md') && i.name !== '_sidebar.md')
-    .map(i => i.name);
+    .map(i => i.name)
+    .filter(name => !opts.isExcluded(toRelPath(docsDir, path.join(dirPath, name))));
 
   const subdirs = items
     .filter(i =>
@@ -62,6 +78,7 @@ function buildSection(
       (opts.includeDotFolders || !i.name.startsWith('.'))
     )
     .map(i => i.name)
+    .filter(name => !opts.isExcluded(toRelPath(docsDir, path.join(dirPath, name))))
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
   const sorted = sortMdFiles(mdFiles, opts.numberedPrefix);
@@ -70,7 +87,7 @@ function buildSection(
 
   for (const file of sorted) {
     const fullPath = path.join(dirPath, file);
-    const relPath = path.relative(docsDir, fullPath).replace(/\\/g, '/');
+    const relPath = toRelPath(docsDir, fullPath);
     const encodedPath = relPath.split('/').map(s => encodeURIComponent(s)).join('/');
     const title = getTitleFromFile(fullPath);
     lines.push(`${indent}* [${title}](${encodedPath})`);
@@ -92,5 +109,10 @@ function buildSection(
 }
 
 export function generateSidebar(docsDir: string, opts: SidebarOptions): string {
-  return buildSection(docsDir, docsDir, opts, '');
+  const resolved: ResolvedOptions = {
+    numberedPrefix: opts.numberedPrefix,
+    includeDotFolders: opts.includeDotFolders,
+    isExcluded: opts.isExcluded ?? (() => false),
+  };
+  return buildSection(docsDir, docsDir, resolved, '');
 }

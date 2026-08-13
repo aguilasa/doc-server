@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generateSidebar } from '../src/sidebar.js';
+import { createExcludeFilter } from '../src/exclude.js';
 
 const fixturesDir = path.join(fileURLToPath(import.meta.url), '../../tests/fixtures');
 
@@ -68,6 +69,26 @@ describe('generateSidebar', () => {
     const docsDir = path.join(fixturesDir, 'with-ignored-dir');
     const result = generateSidebar(docsDir, defaultOpts);
     expect(result).not.toContain('hidden.md');
+  });
+
+  it('drops an excluded folder without dropping a folder whose name merely ends with it', () => {
+    const docsDir = path.join(fixturesDir, 'with-vendored-tools');
+    const isExcluded = createExcludeFilter(docsDir, { exclude: ['tools/**'], respectGitignore: false });
+
+    const result = generateSidebar(docsDir, { ...defaultOpts, isExcluded });
+
+    expect(result).not.toContain('tools/wla-dx');
+    expect(result).toContain('my-tools/x.md');
+    expect(result).toContain('docs/PLANO.md');
+  });
+
+  it('lists everything when no exclude filter is given', () => {
+    const docsDir = path.join(fixturesDir, 'with-vendored-tools');
+
+    const result = generateSidebar(docsDir, defaultOpts);
+
+    expect(result).toContain('tools/wla-dx/README.md');
+    expect(result).toContain('my-tools/x.md');
   });
 
   it('scans dot-prefixed folders when includeDotFolders is enabled, but still skips .ignore', () => {

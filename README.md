@@ -44,6 +44,8 @@ Create a `.docserverrc` in the directory where you run the command (or pass the 
   "name": "My Documentation",
   "port": 4000,
   "homepage": "README.md",
+  "exclude": ["tools/**", "vendor/**"],
+  "respectGitignore": false,
   "sidebar": {
     "numberedPrefix": true,
     "collapsedSections": true
@@ -60,6 +62,25 @@ Create a `.docserverrc` in the directory where you run the command (or pass the 
   }
 }
 ```
+
+### Excluding folders
+
+Serving the root of a repository pulls in every `README.md` it contains — vendored dependencies included. Two top-level fields keep them out of the sidebar and out of the file watcher:
+
+| Field | Default | Description |
+| --- | --- | --- |
+| `exclude` | `[]` | Globs, anchored at the served folder, of what to leave out |
+| `respectGitignore` | `false` | Also leave out whatever the root `.gitignore` ignores |
+
+```json
+{ "exclude": ["tools/**", "vendor/**"], "respectGitignore": true }
+```
+
+In a glob, `**` crosses `/` while `*` and `?` stop at it, and naming a folder takes everything under it. `tools/**` matches `tools/wla-dx/README.md` and does **not** match `my-tools/x.md`; write `**/build/**` when you want any depth.
+
+Excluded files are still served over HTTP — a link pointing at one still works. They only disappear from the generated navigation and from live reload.
+
+`respectGitignore` reads the `.gitignore` of the served folder only, and supports comments, blank lines, `!` negation, `/` anchoring, patterns without a slash matching at any depth, and `*`/`**`/`?`. Nested `.gitignore` files are not read, and a trailing `/` does not restrict a pattern to folders (`build/` behaves like `build`).
 
 ---
 

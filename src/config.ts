@@ -6,6 +6,13 @@ export interface DocServerConfig {
   port: number;
   homepage: string;
   fontSize: number;
+  /**
+   * Globs, ancorados na raiz servida, do que não entra na sidebar nem no
+   * watcher. De topo, e não dentro de `sidebar`, porque atinge os dois.
+   */
+  exclude: string[];
+  /** Quando ligado, o `.gitignore` da raiz exclui junto com `exclude`. */
+  respectGitignore: boolean;
   sidebar: {
     numberedPrefix: boolean;
     collapsedSections: boolean;
@@ -31,6 +38,8 @@ export type PartialConfig = Partial<{
   port: number;
   homepage: string;
   fontSize: number;
+  exclude: string[];
+  respectGitignore: boolean;
   sidebar: Partial<DocServerConfig['sidebar']>;
   features: Partial<DocServerConfig['features']>;
 }>;
@@ -71,6 +80,8 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
     port: 4000,
     homepage: defaultHomepage(docsDir),
     fontSize: 16,
+    exclude: [],
+    respectGitignore: false,
     sidebar: {
       numberedPrefix: true,
       collapsedSections: true,
@@ -96,6 +107,12 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
     port: fileConfig.port ?? defaults.port,
     homepage: fileConfig.homepage ?? defaults.homepage,
     fontSize: fileConfig.fontSize ?? defaults.fontSize,
+    // Um `exclude` que não é lista de strings viraria erro só lá na frente, na
+    // compilação do glob; descartar aqui mantém o resto do arquivo válido.
+    exclude: Array.isArray(fileConfig.exclude)
+      ? fileConfig.exclude.filter(pattern => typeof pattern === 'string')
+      : defaults.exclude,
+    respectGitignore: fileConfig.respectGitignore ?? defaults.respectGitignore,
     sidebar: {
       numberedPrefix: fileConfig.sidebar?.numberedPrefix ?? defaults.sidebar.numberedPrefix,
       collapsedSections: fileConfig.sidebar?.collapsedSections ?? defaults.sidebar.collapsedSections,
