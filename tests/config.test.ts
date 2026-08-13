@@ -162,6 +162,25 @@ describe('loadConfig', () => {
     fs.rmSync(tmpDir, { recursive: true });
   });
 
+  it('githubSlugs defaults to false, unlike every other feature', () => {
+    const docsDir = path.join(fixturesDir, 'with-readme');
+    const config = loadConfig(docsDir, '/nonexistent/.docserverrc');
+    expect(config.features.githubSlugs).toBe(false);
+  });
+
+  it('enables githubSlugs via .docserverrc', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
+    const rcPath = path.join(tmpDir, '.docserverrc');
+    fs.writeFileSync(rcPath, JSON.stringify({ features: { githubSlugs: true } }));
+    const docsDir = path.join(fixturesDir, 'with-readme');
+
+    const config = loadConfig(docsDir, rcPath);
+    expect(config.features.githubSlugs).toBe(true);
+    expect(config.features.mermaid).toBe(true); // default preserved
+
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
   it('CLI flags override .docserverrc', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docserver-test-'));
     const rcPath = path.join(tmpDir, '.docserverrc');

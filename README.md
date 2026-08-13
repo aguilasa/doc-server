@@ -58,7 +58,8 @@ Create a `.docserverrc` in the directory where you run the command (or pass the 
     "search": true,
     "pagination": true,
     "zoomImage": true,
-    "pageTitle": true
+    "pageTitle": true,
+    "githubSlugs": false
   }
 }
 ```
@@ -100,7 +101,7 @@ File titles are extracted from the frontmatter `title:` field, the first `# Head
 
 ## Features
 
-All enabled by default, each individually disableable via `.docserverrc`:
+All enabled by default except **GitHub Slugs**, each individually toggled via `.docserverrc`:
 
 | Feature | Description |
 | --- | --- |
@@ -112,10 +113,24 @@ All enabled by default, each individually disableable via `.docserverrc`:
 | **Pagination** | Previous / Next navigation |
 | **Zoom Image** | Click images to enlarge |
 | **Page Title** | `<title>` updated with the current page's H1 |
+| **GitHub Slugs** | GitHub-style heading anchors — **off by default**, see below |
 
 Linked source files (`.c`, `.h`, `.py`, `.sh`, `.sql`, `.yml`, `Makefile`, …) open in the browser as plain text instead of downloading. No syntax highlighting — that is a rendered page, not a served file.
 
-Syntax highlighting: `bash`, `javascript`, `typescript`, `json`, `python`, `java`, `sql`, `yaml`, `docker`, `markdown`, `nginx`, `php`, `ruby`, `go`, `rust`, `css`, `scss`, `less`.
+Syntax highlighting inside code blocks: `bash`, `javascript`, `typescript`, `json`, `python`, `java`, `sql`, `yaml`, `docker`, `markdown`, `nginx`, `php`, `ruby`, `go`, `rust`, `css`, `scss`, `less`.
+
+### GitHub-style heading anchors
+
+Docsify and GitHub disagree on how a heading becomes an anchor: docsify collapses repeated hyphens and prefixes a leading digit with `_`.
+
+| Heading | GitHub | Docsify |
+| --- | --- | --- |
+| `### Fase 0 — Ferramental` | `fase-0--ferramental` | `fase-0-ferramental` |
+| `## 5.1 What changed` | `51-what-changed` | `_5-1-what-changed` |
+
+A link written for GitHub therefore navigates without scrolling — no error, no 404. Set `"features": { "githubSlugs": true }` to add a second, GitHub-named anchor next to each affected heading. The heading keeps its docsify id, so the sidebar's heading index and docsify's own links keep working.
+
+**Known limitation:** a heading that starts with a digit still will not scroll. Docsify looks the anchor up with `querySelector`, and `#51-what-changed` is not a valid CSS selector — the browser rejects it. Nothing in docsify's configuration reaches that call. Other headings on the same page are unaffected. Avoid starting an anchored heading with a digit.
 
 ---
 

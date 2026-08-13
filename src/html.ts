@@ -29,6 +29,7 @@ export function generateHtml(config: DocServerConfig): string {
   const downloadableLinksJs = f.downloadableAttachments ? readAsset('assets/js/downloadable-links.js') : '';
   const pdfExportCss = f.pdfExport ? readAsset('assets/css/pdf-export.css') : '';
   const pdfExportJs = f.pdfExport ? readAsset('assets/js/pdf-export.js') : '';
+  const githubSlugsJs = f.githubSlugs ? readAsset('assets/js/github-slugs.js') : '';
   const fontSizeJs = readAsset('assets/js/font-size.js');
   const sidebarResizeJs = readAsset('assets/js/sidebar-resize.js');
 
@@ -105,6 +106,11 @@ export function generateHtml(config: DocServerConfig): string {
   }
   if (f.pageTitle) {
     lines.push(`  <script>${pageTitleJs}</script>`);
+  }
+  // Precisa rodar depois do window.$docsify e antes do docsify: ele substitui
+  // o renderer de heading, que o docsify lê na inicialização.
+  if (f.githubSlugs) {
+    lines.push(`  <script>${githubSlugsJs}</script>`);
   }
   lines.push('');
   lines.push('  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>');

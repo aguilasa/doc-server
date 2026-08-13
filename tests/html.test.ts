@@ -11,6 +11,8 @@ function makeConfig(
     port: 4000,
     homepage: 'README.md',
     fontSize,
+    exclude: [],
+    respectGitignore: false,
     sidebar: { numberedPrefix: true, collapsedSections: true, includeDotFolders: false },
     features: {
       taskLists: true,
@@ -24,6 +26,7 @@ function makeConfig(
       youtubeEmbed: true,
       downloadableAttachments: true,
       pdfExport: true,
+      githubSlugs: false,
       ...overrides,
     },
   };
@@ -168,6 +171,23 @@ describe('generateHtml', () => {
   it('contains --doc-font-size: 20px when fontSize is 20', () => {
     const html = generateHtml(makeConfig({}, 20));
     expect(html).toContain('--doc-font-size: 20px');
+  });
+
+  it('excludes the GitHub slug plugin by default', () => {
+    const html = generateHtml(makeConfig());
+    expect(html).not.toContain('github-slug-anchor');
+  });
+
+  it('includes the GitHub slug plugin when githubSlugs is enabled', () => {
+    const html = generateHtml(makeConfig({ githubSlugs: true }));
+    expect(html).toContain('github-slug-anchor');
+    expect(html).toContain('renderer.heading');
+  });
+
+  it('loads the GitHub slug plugin before docsify, which reads the renderer on init', () => {
+    const html = generateHtml(makeConfig({ githubSlugs: true }));
+    expect(html.indexOf('github-slug-anchor'))
+      .toBeLessThan(html.indexOf('cdn.jsdelivr.net/npm/docsify@4"></script>'));
   });
 
   it('contains sidebar-resize-handle in all configurations', () => {

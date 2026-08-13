@@ -30,6 +30,7 @@ export interface DocServerConfig {
     youtubeEmbed: boolean;
     downloadableAttachments: boolean;
     pdfExport: boolean;
+    githubSlugs: boolean;
   };
 }
 
@@ -99,6 +100,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
       youtubeEmbed: true,
       downloadableAttachments: true,
       pdfExport: true,
+      githubSlugs: false,
     },
   };
 
@@ -130,6 +132,7 @@ export function loadConfig(docsDir: string, configPath?: string, cliFlags?: CliF
       youtubeEmbed: fileConfig.features?.youtubeEmbed ?? defaults.features.youtubeEmbed,
       downloadableAttachments: fileConfig.features?.downloadableAttachments ?? defaults.features.downloadableAttachments,
       pdfExport: fileConfig.features?.pdfExport ?? defaults.features.pdfExport,
+      githubSlugs: fileConfig.features?.githubSlugs ?? defaults.features.githubSlugs,
     },
   };
 
