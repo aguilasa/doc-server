@@ -19,6 +19,14 @@ const HEARTBEAT_MS = 30_000;
 // Editor salva em duas etapas; uma rajada de eventos vira um reload só.
 const RELOAD_DEBOUNCE_MS = 100;
 
+// Documentação técnica linka código o tempo todo, e é o link que se quer
+// clicar durante a leitura. Sem um tipo declarado o navegador cai no
+// octet-stream e baixa o arquivo em vez de mostrá-lo.
+const PLAIN_TEXT = 'text/plain; charset=utf-8';
+
+// Arquivos de código que não têm extensão. Comparados em minúsculas.
+const PLAIN_TEXT_FILENAMES = new Set(['makefile', 'dockerfile']);
+
 const MIME_TYPES: Record<string, string> = {
   '.md': 'text/markdown; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -37,10 +45,40 @@ const MIME_TYPES: Record<string, string> = {
   '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
   '.otf': 'font/otf',
+  '.c': PLAIN_TEXT,
+  '.h': PLAIN_TEXT,
+  '.cpp': PLAIN_TEXT,
+  '.hpp': PLAIN_TEXT,
+  '.ts': PLAIN_TEXT,
+  '.tsx': PLAIN_TEXT,
+  '.py': PLAIN_TEXT,
+  '.rb': PLAIN_TEXT,
+  '.go': PLAIN_TEXT,
+  '.rs': PLAIN_TEXT,
+  '.java': PLAIN_TEXT,
+  '.kt': PLAIN_TEXT,
+  '.sh': PLAIN_TEXT,
+  '.zsh': PLAIN_TEXT,
+  '.sql': PLAIN_TEXT,
+  '.yml': PLAIN_TEXT,
+  '.yaml': PLAIN_TEXT,
+  '.toml': PLAIN_TEXT,
+  '.ini': PLAIN_TEXT,
+  '.conf': PLAIN_TEXT,
+  '.asm': PLAIN_TEXT,
+  '.s': PLAIN_TEXT,
+  '.patch': PLAIN_TEXT,
+  '.diff': PLAIN_TEXT,
+  '.txt': PLAIN_TEXT,
+  '.log': PLAIN_TEXT,
+  '.mk': PLAIN_TEXT,
 };
 
 function getMimeType(filepath: string): string {
   const ext = path.extname(filepath).toLowerCase();
+  if (ext === '' && PLAIN_TEXT_FILENAMES.has(path.basename(filepath).toLowerCase())) {
+    return PLAIN_TEXT;
+  }
   return MIME_TYPES[ext] ?? 'application/octet-stream';
 }
 

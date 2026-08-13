@@ -121,6 +121,42 @@ describe('startServer routes', () => {
   });
 });
 
+describe('startServer source file types', () => {
+  let server: RunningServer;
+
+  beforeAll(async () => {
+    server = await serve(path.join(fixturesDir, 'with-source-files'));
+  });
+
+  afterAll(() => server.stop());
+
+  it('shows a C header as text instead of offering it as a download', async () => {
+    const res = await request(server.port, '/src/hw.h');
+
+    expect(res.status).toBe(200);
+    expect(res.contentType).toContain('text/plain');
+    expect(res.body).toContain('#ifndef HW_H');
+  });
+
+  it('shows a shell script as text', async () => {
+    const res = await request(server.port, '/src/build.sh');
+
+    expect(res.contentType).toContain('text/plain');
+  });
+
+  it('shows an extensionless Makefile as text', async () => {
+    const res = await request(server.port, '/src/Makefile');
+
+    expect(res.contentType).toContain('text/plain');
+  });
+
+  it('still offers an unknown binary extension as a download', async () => {
+    const res = await request(server.port, '/src/dump.bin');
+
+    expect(res.contentType).toContain('application/octet-stream');
+  });
+});
+
 describe('startServer path containment', () => {
   let server: RunningServer;
   let root: string;

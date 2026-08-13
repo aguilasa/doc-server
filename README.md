@@ -113,6 +113,8 @@ All enabled by default, each individually disableable via `.docserverrc`:
 | **Zoom Image** | Click images to enlarge |
 | **Page Title** | `<title>` updated with the current page's H1 |
 
+Linked source files (`.c`, `.h`, `.py`, `.sh`, `.sql`, `.yml`, `Makefile`, …) open in the browser as plain text instead of downloading. No syntax highlighting — that is a rendered page, not a served file.
+
 Syntax highlighting: `bash`, `javascript`, `typescript`, `json`, `python`, `java`, `sql`, `yaml`, `docker`, `markdown`, `nginx`, `php`, `ruby`, `go`, `rust`, `css`, `scss`, `less`.
 
 ---
