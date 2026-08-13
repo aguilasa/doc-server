@@ -107,9 +107,72 @@ GitHub accepts two link conventions; docsify only does one of them at a time.
 | `/docs/deep/NOTA.md` | `../VIZINHO.md` | **404** | works |
 | `/docs/PLANO.md` | `/docs/EQUIVALENCIA.md` | works | works |
 
-With `false`, every path without a leading slash is anchored at the served folder. With `true`, it is resolved from the file that contains it — what GitHub does. A link that starts with `/` resolves the same in both modes, so it is the portable form.
+With `false`, every path without a leading slash is anchored at the served folder. With `true`, it is resolved from the file that contains it — what GitHub does.
 
-**Use `"relativePath": true`** for documentation that is also read on GitHub: the same files then work in both places, whichever style the links use. **Keep the default `false`** for documentation that only lives in doc-server — turning it on changes how every existing link resolves.
+Keep the default `false` for documentation that only lives in doc-server; turning it on changes how every existing link resolves. Turn it on for documentation that is also read on GitHub — see the next section.
+
+---
+
+## Writing docs that work on GitHub too
+
+The same `.md` files, read in both places, with links that resolve the same way.
+
+### 1. Serve the repository root
+
+```bash
+cd <repo> && doc-server .
+```
+
+Not `doc-server ./docs`. GitHub resolves links against the repository root, so doc-server has to serve the same root — otherwise a link that crosses out of `docs/` has nowhere to land.
+
+`.docserverrc` at the repository root, and run the command from there: the config is read from the current directory, not from the served folder.
+
+```json
+{
+  "relativePath": true,
+  "respectGitignore": true,
+  "features": { "githubSlugs": true }
+}
+```
+
+All three are off by default and all three are needed: `relativePath` for relative links, `githubSlugs` for anchors, `respectGitignore` so serving a repository root does not put `node_modules/` and ignored files on the wire.
+
+### 2. Link with relative paths
+
+Both styles work on GitHub, and both work here — but only one works everywhere else.
+
+| Written in | Link | GitHub | doc-server | VS Code preview, other renderers |
+| --- | --- | --- | --- | --- |
+| `/docs/PLANO.md` | `EQUIVALENCIA.md` | works | works¹ | works |
+| `/docs/deep/NOTA.md` | `../VIZINHO.md` | works | works¹ | works |
+| `/README.md` | `docs/PLANO.md` | works | works | works |
+| anywhere | `/docs/PLANO.md` | works | works | **breaks** |
+
+¹ needs `"relativePath": true`.
+
+**Prefer relative paths.** A leading slash means "filesystem root" to every renderer that is not GitHub, so it breaks in the VS Code preview and in any other Markdown tool. It is the right choice only if you cannot turn `relativePath` on — it is the one form that resolves identically in both of doc-server's modes.
+
+Pick one style and keep the whole repository on it.
+
+### 3. Write anchors the way GitHub spells them
+
+```markdown
+[see the phase](../docs/PLANO.md#fase-0--ferramental)
+```
+
+With `githubSlugs` on this resolves in both places, whether the link is clicked or pasted cold into the address bar.
+
+Two rules apply to the **heading**, because no setting fixes them:
+
+- **Never start an anchored heading with a digit.** `## 5.1 What changed` produces an id that docsify's `querySelector` rejects. Write `## Phase 5.1 — What changed` instead.
+- **An em dash is safe** with `githubSlugs` on — it becomes `--` on both sides.
+
+### 4. The rest of the checklist
+
+- **Keep the `.md` extension.** `[plan](../docs/PLANO)` works in docsify and 404s on GitHub.
+- **Match the case exactly.** GitHub and Linux are case-sensitive; macOS is not, so a wrong case only breaks after you push.
+- **Do not link to gitignored files.** With `respectGitignore` on they answer `404` — and they are not on GitHub either, because they are not in the repository. Same rule on both sides, deliberately.
+- **Link the file, not the folder.** `[docs](../docs/)` shows a file tree on GitHub; here it serves that folder's `README.md`.
 
 ---
 
@@ -159,6 +222,8 @@ Docsify and GitHub disagree on how a heading becomes an anchor: docsify collapse
 A link written for GitHub therefore navigates without scrolling — no error, no 404. Set `"features": { "githubSlugs": true }` to add a second, GitHub-named anchor next to each affected heading. The heading keeps its docsify id, so the sidebar's heading index and docsify's own links keep working.
 
 **Known limitation:** a heading that starts with a digit still will not scroll. Docsify looks the anchor up with `querySelector`, and `#51-what-changed` is not a valid CSS selector — the browser rejects it. Nothing in docsify's configuration reaches that call. Other headings on the same page are unaffected. Avoid starting an anchored heading with a digit.
+
+Anchors work across files as well as within one — see [Writing docs that work on GitHub too](#writing-docs-that-work-on-github-too) for how to set the whole thing up.
 
 ---
 
