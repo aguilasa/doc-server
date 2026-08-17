@@ -1,0 +1,46 @@
+name: release
+
+# Uma tag 'v*' constrói, testa e publica o tarball como asset da release.
+# O asset é nomeado sem versão de propósito: o GitHub serve
+# /releases/latest/download/doc-server.tgz, que só é estável se o nome do
+# arquivo não mudar a cada versão.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # 'npm ci' dispara o prepare, que roda o tsc e produz o dist/.
+      - run: npm ci
+
+      # Nada é publicado a partir de um build que não passa na suíte.
+      - run: npm test -- --run
+
+      - run: npm pack
+
+      # 'npm pack' escreve doc-server-<versao>.tgz; a release recebe as duas
+      # formas — a versionada, para quem quer fixar, e a estável, para a URL
+      # 'latest' funcionar.
+      - name: Rename tarball to the stable asset name
+        run: cp doc-server-*.tgz doc-server.tgz
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            doc-server.tgz doc-server-*.tgz \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

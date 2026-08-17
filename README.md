@@ -13,6 +13,14 @@ Zero configuration. Zero generated files in your folder.
 ## Installation
 
 ```bash
+npm install -g https://github.com/aguilasa/doc-server/releases/latest/download/doc-server.tgz
+```
+
+That URL always points at the newest release. The tarball is built and tested on CI by [`.github/workflows/release.yml`](.github/workflows/release.yml) whenever a `v*` tag is pushed, and it ships with `dist/` already compiled.
+
+From a clone instead:
+
+```bash
 git clone https://github.com/aguilasa/doc-server.git
 cd doc-server
 npm run install:local
@@ -20,7 +28,7 @@ npm run install:local
 
 `dist/` is not versioned — the `prepare` script builds it during `npm install`, so a fresh clone needs no separate build step.
 
-Note that `npm install -g github:aguilasa/doc-server` does **not** work: npm skips devDependencies when installing a git URL globally, so `tsc` is missing when `prepare` runs. Installing it as a project dependency (`npm install github:aguilasa/doc-server`) does work, because that path does install them.
+One form that does **not** work is `npm install -g github:aguilasa/doc-server`: npm skips devDependencies when installing a git URL globally, so `tsc` is missing when `prepare` runs. The same URL as a project dependency (`npm install github:aguilasa/doc-server`) does work, because that path installs them.
 
 ## Usage
 
