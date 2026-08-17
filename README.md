@@ -238,3 +238,11 @@ npm test -- --run      # run tests once
 npm run install:local  # build + install globally
 npm run uninstall:local
 ```
+
+Requires Node.js 20 or newer. Runtime dependencies are `chokidar` and `ws`, and nothing else — everything else is a Node builtin.
+
+---
+
+## License
+
+[MIT](LICENSE) © Ingmar Aguiar

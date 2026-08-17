@@ -1,14 +1,42 @@
 {
   "name": "doc-server",
   "version": "0.1.0",
+  "description": "Local Markdown documentation server with automatic navigation, Mermaid support, and live reload. Zero configuration, zero generated files.",
   "type": "module",
+  "license": "MIT",
+  "author": "Ingmar Aguiar <ingmar.aguiar@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aguilasa/doc-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aguilasa/doc-server/issues"
+  },
+  "homepage": "https://github.com/aguilasa/doc-server#readme",
+  "keywords": [
+    "documentation",
+    "markdown",
+    "docsify",
+    "static-site",
+    "live-reload",
+    "mermaid",
+    "cli"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "doc-server": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "templates"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest",
+    "prepublishOnly": "npm run build",
     "install:local": "npm run build && npm install -g .",
     "uninstall:local": "npm uninstall -g doc-server"
   },
