@@ -13,10 +13,14 @@ Zero configuration. Zero generated files in your folder.
 ## Installation
 
 ```bash
-npm install -g github:aguilasa/doc-server
+git clone https://github.com/aguilasa/doc-server.git
+cd doc-server
+npm run install:local
 ```
 
-`dist/` is not versioned. npm builds it during install through the `prepare` script, which is why the install pulls the dev dependencies too.
+`dist/` is not versioned — the `prepare` script builds it during `npm install`, so a fresh clone needs no separate build step.
+
+Note that `npm install -g github:aguilasa/doc-server` does **not** work: npm skips devDependencies when installing a git URL globally, so `tsc` is missing when `prepare` runs. Installing it as a project dependency (`npm install github:aguilasa/doc-server`) does work, because that path does install them.
 
 ## Usage
 
