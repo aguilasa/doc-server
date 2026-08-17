@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MISE="$HOME/.local/bin/mise"
+# Resolve o mise pelo PATH; cai no caminho padrão de instalação quando ele não
+# está no PATH (shell não interativo, cron).
+MISE="$(command -v mise || echo "$HOME/.local/bin/mise")"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ ! -x "$MISE" ]]; then
+  echo "mise não encontrado. Instale-o ou ajuste MISE neste script." >&2
+  exit 1
+fi
 
 mapfile -t VERSIONS < <("$MISE" list node 2>/dev/null | awk '/^node/ {print $2}')
 

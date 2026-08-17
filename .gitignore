@@ -24,3 +24,11 @@ coverage/
 # Temp
 *.tmp
 tmp
+
+# Notas de projeto e configuração de agente — ficam fora do repositório.
+# Ancorados com '/' de propósito: um 'docs/' solto casaria também com
+# tests/fixtures/with-vendored-tools/docs/, que é fixture e precisa ser versionada.
+/docs/
+/CLAUDE.md
+/.windsurfrules
+/.claude/
