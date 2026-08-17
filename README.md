@@ -13,8 +13,10 @@ Zero configuration. Zero generated files in your folder.
 ## Installation
 
 ```bash
-npm install -g doc-server
+npm install -g github:aguilasa/doc-server
 ```
+
+`dist/` is not versioned. npm builds it during install through the `prepare` script, which is why the install pulls the dev dependencies too.
 
 ## Usage
 

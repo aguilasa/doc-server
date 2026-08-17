@@ -36,7 +36,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest",
-    "prepublishOnly": "npm run build",
+    "prepare": "npm run build",
     "install:local": "npm run build && npm install -g .",
     "uninstall:local": "npm uninstall -g doc-server"
   },
