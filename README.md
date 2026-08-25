@@ -125,6 +125,16 @@ With `false`, every path without a leading slash is anchored at the served folde
 
 Keep the default `false` for documentation that only lives in doc-server; turning it on changes how every existing link resolves. Turn it on for documentation that is also read on GitHub — see the next section.
 
+#### Raw HTML is covered too
+
+Docsify rewrites relative paths only in Markdown syntax, because only that goes through its compiler. HTML written by hand inside the `.md` reaches the DOM exactly as typed — and since docsify is a hash-router SPA, the document's URL is always the site root, so the browser resolves `<img src="imagens/x.jpg">` against `/` and gets a 404. The same file works on GitHub, where every document has a URL of its own.
+
+`relativePath: true` closes that gap as well: `src` of `<img>` and `href` of `<a>` inside `.markdown-section` are resolved against the file that contains them, exactly like the Markdown ones. A raw-HTML link to another `.md` becomes a router route (`#/…`) so navigation stays inside the SPA.
+
+This matters because raw HTML is the only way to write a gallery with `loading="lazy"`, `width` and `target="_blank"` — attributes Markdown's image syntax cannot express, and without which a page holding hundreds of full-resolution photos is unusable.
+
+Out of scope, deliberately: `srcset`, `<source>`, `<video>` and inline CSS `url()`.
+
 ---
 
 ## Writing docs that work on GitHub too

@@ -202,6 +202,17 @@ describe('generateHtml', () => {
       .toBeLessThan(html.indexOf('cdn.jsdelivr.net/npm/docsify@4"></script>'));
   });
 
+  it('omits the relative-HTML-assets plugin when relativePath is off', () => {
+    const html = generateHtml(makeConfig());
+    expect(html).not.toContain('relativeHtmlAssetsPlugin');
+  });
+
+  it('includes the relative-HTML-assets plugin when relativePath is on', () => {
+    const html = generateHtml(makeConfig({}, 16, true));
+    expect(html).toContain('relativeHtmlAssetsPlugin');
+    expect(html).toContain('markdown-section');
+  });
+
   it('contains sidebar-resize-handle in all configurations', () => {
     const html = generateHtml(makeConfig());
     expect(html).toContain('sidebar-resize-handle');

@@ -30,6 +30,9 @@ export function generateHtml(config: DocServerConfig): string {
   const pdfExportCss = f.pdfExport ? readAsset('assets/css/pdf-export.css') : '';
   const pdfExportJs = f.pdfExport ? readAsset('assets/js/pdf-export.js') : '';
   const githubSlugsJs = f.githubSlugs ? readAsset('assets/js/github-slugs.js') : '';
+  const relativeHtmlAssetsJs = config.relativePath
+    ? readAsset('assets/js/relative-html-assets.js')
+    : '';
   const fontSizeJs = readAsset('assets/js/font-size.js');
   const sidebarResizeJs = readAsset('assets/js/sidebar-resize.js');
 
@@ -112,6 +115,12 @@ export function generateHtml(config: DocServerConfig): string {
   // o renderer de heading, que o docsify lê na inicialização.
   if (f.githubSlugs) {
     lines.push(`  <script>${githubSlugsJs}</script>`);
+  }
+  // Acompanha o relativePath em vez de ter chave própria: o docsify resolve
+  // caminho relativo só na sintaxe Markdown, e deixar o HTML cru de fora é
+  // inconsistência da mesma promessa, não um recurso separado.
+  if (config.relativePath) {
+    lines.push(`  <script>${relativeHtmlAssetsJs}</script>`);
   }
   lines.push('');
   lines.push('  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>');
