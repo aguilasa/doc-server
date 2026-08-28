@@ -1,0 +1,13 @@
+{
+  "relativePath": true,
+  "respectGitignore": false,
+  "exclude": [
+    "node_modules/**",
+    "dist/**",
+    "coverage/**",
+    "tmp/**"
+  ],
+  "features": {
+    "githubSlugs": true
+  }
+}
