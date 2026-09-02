@@ -52,7 +52,7 @@ class MermaidViewer {
     
     const title = document.createElement('div')
     title.className = 'mermaid-viewer-title'
-    title.textContent = 'Diagrama Mermaid'
+    title.textContent = 'Mermaid diagram'
     
     const controls = document.createElement('div')
     controls.className = 'mermaid-viewer-controls'
@@ -70,12 +70,12 @@ class MermaidViewer {
     
     const resetBtn = document.createElement('button')
     resetBtn.className = 'mermaid-viewer-btn'
-    resetBtn.textContent = 'Resetar'
+    resetBtn.textContent = 'Reset'
     resetBtn.addEventListener('click', () => this.resetView())
     
     const closeBtn = document.createElement('button')
     closeBtn.className = 'mermaid-viewer-close'
-    closeBtn.textContent = 'Fechar'
+    closeBtn.textContent = 'Close'
     closeBtn.addEventListener('click', () => this.close())
     
     controls.appendChild(zoomInBtn)
@@ -195,7 +195,7 @@ class MermaidViewer {
     })
   }
   
-  open(svgElement, title = 'Diagrama Mermaid') {
+  open(svgElement, title = 'Mermaid diagram') {
     this.currentSvg = svgElement.cloneNode(true)
     this.svgWrapper.innerHTML = ''
     this.svgWrapper.appendChild(this.currentSvg)
@@ -372,7 +372,7 @@ class MermaidViewer {
     const button = document.createElement('button')
     // Classe própria: '.mermaid-viewer-btn' é dos botões do header do modal.
     button.className = 'mermaid-viewer-open-btn'
-    button.textContent = '🔍 Visualizar'
+    button.textContent = '🔍 View'
     button.style.cssText = `
       position: absolute;
       top: 10px;
@@ -404,7 +404,7 @@ class MermaidViewer {
     // Evento de clique
     button.addEventListener('click', () => {
       const title = document.querySelector('h1, h2, h3')
-      const titleText = title ? title.textContent.trim() : 'Diagrama Mermaid'
+      const titleText = title ? title.textContent.trim() : 'Mermaid diagram'
       this.open(svgElement, titleText)
     })
   }

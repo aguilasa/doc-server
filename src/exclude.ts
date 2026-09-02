@@ -178,7 +178,7 @@ function readGitignoreRules(rootDir: string): Rule[] {
     const code = (err as NodeJS.ErrnoException).code;
     if (code !== 'ENOENT') {
       const message = err instanceof Error ? err.message : String(err);
-      console.warn(`Aviso: não foi possível ler ${gitignorePath} (${message})`);
+      console.warn(`Warning: could not read ${gitignorePath} (${message})`);
     }
     return [];
   }

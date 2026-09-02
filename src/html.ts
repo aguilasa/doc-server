@@ -39,7 +39,7 @@ export function generateHtml(config: DocServerConfig): string {
   const lines: string[] = [];
 
   lines.push('<!DOCTYPE html>');
-  lines.push('<html lang="pt-BR">');
+  lines.push('<html lang="en">');
   lines.push('<head>');
   lines.push('  <meta charset="UTF-8">');
   lines.push(`  <title>${config.name}</title>`);
@@ -93,10 +93,10 @@ export function generateHtml(config: DocServerConfig): string {
   lines.push('        renderer: { code: function(code, lang) { return this.origin.code.apply(this, arguments); } }');
   lines.push('      },');
   if (f.pagination) {
-    lines.push("      pagination: { previousText: 'Anterior', nextText: 'Próximo', crossChapter: true, crossChapterText: true },");
+    lines.push("      pagination: { previousText: 'Previous', nextText: 'Next', crossChapter: true, crossChapterText: true },");
   }
   if (f.copyCode) {
-    lines.push("      copyCode: { buttonText: 'Copiar', errorText: 'Falha ao copiar', successText: 'Copiado!' },");
+    lines.push("      copyCode: { buttonText: 'Copy', errorText: 'Copy failed', successText: 'Copied!' },");
   }
   lines.push('      plugins: [],');
   if (f.mermaid) {

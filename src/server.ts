@@ -336,7 +336,7 @@ export function startServer(
   // Um 'error' sem listener num EventEmitter derruba o processo. Aba fechada
   // bruscamente gera ECONNRESET — não pode levar o servidor junto.
   wss.on('error', (err: Error) => {
-    console.warn(`Aviso: erro no servidor WebSocket (${err.message})`);
+    console.warn(`Warning: WebSocket server error (${err.message})`);
   });
 
   wss.on('connection', (ws) => {
@@ -345,7 +345,7 @@ export function startServer(
     ws.on('close', () => clients.delete(ws));
     ws.on('error', (err: Error) => {
       clients.delete(ws);
-      console.warn(`Aviso: erro em socket de live reload (${err.message})`);
+      console.warn(`Warning: live reload socket error (${err.message})`);
     });
   });
 
@@ -402,7 +402,7 @@ export function startServer(
   // take the whole server down — warn and keep serving.
   watcher.on('error', (err: unknown) => {
     const e = err as NodeJS.ErrnoException;
-    console.warn(`Aviso: não foi possível observar ${e.path ?? '?'} (${e.code ?? e.message})`);
+    console.warn(`Warning: could not watch ${e.path ?? '?'} (${e.code ?? e.message})`);
   });
 
   let reloadTimer: NodeJS.Timeout | undefined;

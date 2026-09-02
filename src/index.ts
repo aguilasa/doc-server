@@ -5,19 +5,19 @@ import { findAvailablePort, startServer } from './server.js';
 
 function printHelp(): void {
   console.log(`
-doc-server — Serve uma pasta de Markdown como documentação local com Docsify
+doc-server — Serve a folder of Markdown as local documentation with Docsify
 
-Uso:
-  doc-server <pasta> [opções]
+Usage:
+  doc-server <folder> [options]
 
-Argumentos:
-  pasta           Caminho para a pasta com os arquivos .md (obrigatório)
+Arguments:
+  folder          Path to the folder containing the .md files (required)
 
-Opções:
-  --port,   -p   Porta do servidor (padrão: 4000)
-  --name,   -n   Título do site
-  --config, -c   Caminho para o arquivo .docserverrc
-  --help,   -h   Exibe esta ajuda
+Options:
+  --port,   -p   Server port (default: 4000)
+  --name,   -n   Site title
+  --config, -c   Path to the .docserverrc file
+  --help,   -h   Show this help
 `);
 }
 
@@ -69,7 +69,7 @@ async function main(): Promise<void> {
   }
 
   if (!parsed.docsDir) {
-    console.error('Erro: informe o caminho para a pasta de documentação.');
+    console.error('Error: provide the path to the documentation folder.');
     printHelp();
     process.exit(1);
   }
@@ -84,7 +84,7 @@ async function main(): Promise<void> {
   const port = await findAvailablePort(config.port);
   const { port: boundPort, stop } = await startServer(docsDir, config, port);
 
-  console.log(`Documentação disponível em http://localhost:${boundPort}`);
+  console.log(`Documentation available at http://localhost:${boundPort}`);
 
   // Encerramento limpo: fecha sockets, watcher e servidor antes de sair.
   let shuttingDown = false;
