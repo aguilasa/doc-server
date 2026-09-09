@@ -36,3 +36,26 @@
   text-decoration: line-through;
   color: #999;
 }
+
+/* Destaque do link ativo na sidebar, para o caso que o tema não cobre.
+ *
+ * O vue.css marca o item ativo com uma regra só:
+ *
+ *   .sidebar ul li.active > a { border-right: 2px solid; color: …; font-weight: 600 }
+ *
+ * Só que o docsify decide onde pôr a classe com `isParent ? a.parentNode : a`,
+ * e o pai do link nem sempre é o `li`. Quando a lista é frouxa — o que acontece
+ * no nível de cima assim que existe ao menos uma pasta, porque `sidebar.ts` põe
+ * uma linha em branco antes de cada seção — o CommonMark embrulha o conteúdo do
+ * item num `<p>`, e é nele que a classe cai. Aí `li.active` não casa com nada e
+ * o arquivo de raiz aberto fica sem o destaque, enquanto os de dentro de pasta
+ * ficam com ele: a mesma navegação, dois comportamentos.
+ *
+ * Medido: `getComputedStyle(a).borderRightWidth` = '0px' no arquivo de raiz.
+ * A correção é repetir a declaração do tema para a posição que ele não previu.
+ */
+.sidebar ul li > p.active > a {
+  border-right: 2px solid;
+  color: var(--theme-color, #42b983);
+  font-weight: 600;
+}

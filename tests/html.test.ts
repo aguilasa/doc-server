@@ -227,4 +227,9 @@ describe('generateHtml', () => {
     }));
     expect(html).toContain('sidebar-resize-handle');
   });
+  it('highlights the active sidebar link when docsify marks the wrapping p', () => {
+    const html = generateHtml(makeConfig());
+    expect(html).toContain('.sidebar ul li > p.active > a');
+  });
+
 });
