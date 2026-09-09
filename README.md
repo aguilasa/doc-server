@@ -208,9 +208,32 @@ The sidebar is generated automatically. Ordering rules applied in sequence:
 2. Numerically prefixed files (`01-intro.md`) are sorted numerically — prefix removed from the title
 3. All other files in alphabetical order
 
-Subdirectories become collapsible sections with humanized titles (`my-folder` → **My Folder**).
+Subdirectories become collapsible sections with humanized titles (`my-folder` → **My folder**).
 
 File titles are extracted from the frontmatter `title:` field, the first `# Heading`, or the filename.
+
+### Tree navigation
+
+The sidebar is a tree. Folders collapse and expand on click (or with Enter/Space
+when focused), and:
+
+- the folder chain leading to the file you are reading expands on its own, so
+  navigating always reveals where you are;
+- what you expand or collapse by hand is remembered per folder, and survives
+  navigation, reloads and live-reload saves. Simply *visiting* a file never
+  overwrites that — only clicking does;
+- `sidebar.collapsedSections` decides the starting point for folders you have
+  never touched: `true` (the default) starts them closed, `false` starts them open.
+
+### Filtering the tree
+
+A **Filter files** box above the tree narrows it by name as you type. It matches
+both the displayed title and the file path, ignores accents (`rapido` finds
+`Rápido`), and expands whatever it needs to in order to reveal a match. Clearing
+it restores the folders exactly as you had them, rather than leaving everything open.
+
+This is navigation only. Searching the *contents* of your documents is docsify's
+own search box, which is unaffected — the two never show at the same time.
 
 ---
 

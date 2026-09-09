@@ -6,7 +6,7 @@ import { createExcludeFilter } from '../src/exclude.js';
 
 const fixturesDir = path.join(fileURLToPath(import.meta.url), '../../tests/fixtures');
 
-const defaultOpts = { numberedPrefix: true, collapsedSections: true, includeDotFolders: false };
+const defaultOpts = { numberedPrefix: true, includeDotFolders: false };
 
 describe('generateSidebar', () => {
   it('generates sidebar for simple folder (no README)', () => {

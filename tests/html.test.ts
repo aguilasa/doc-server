@@ -6,6 +6,7 @@ function makeConfig(
   overrides: Partial<DocServerConfig['features']> = {},
   fontSize = 16,
   relativePath = false,
+  collapsedSections = true,
 ): DocServerConfig {
   return {
     name: 'Test Docs',
@@ -15,7 +16,7 @@ function makeConfig(
     exclude: [],
     respectGitignore: false,
     relativePath,
-    sidebar: { numberedPrefix: true, collapsedSections: true, includeDotFolders: false },
+    sidebar: { numberedPrefix: true, collapsedSections, includeDotFolders: false },
     features: {
       taskLists: true,
       mermaid: true,
@@ -227,9 +228,46 @@ describe('generateHtml', () => {
     }));
     expect(html).toContain('sidebar-resize-handle');
   });
+
+  it('ships the collapsible sidebar tree in all configurations', () => {
+    const html = generateHtml(makeConfig());
+    expect(html).toContain('sidebar-tree-folder');
+  });
+
+  it('ships the collapsible sidebar tree even when all features disabled', () => {
+    const html = generateHtml(makeConfig({
+      taskLists: false, mermaid: false, mermaidViewer: false,
+      copyCode: false, search: false, pagination: false,
+      zoomImage: false, pageTitle: false, youtubeEmbed: false,
+      downloadableAttachments: false, pdfExport: false,
+    }));
+    expect(html).toContain('sidebar-tree-folder');
+  });
+
+  it('ships the sidebar filter box in all configurations', () => {
+    const html = generateHtml(makeConfig());
+    expect(html).toContain('sidebar-tree-filter');
+  });
+
+  it('tells the client to start sections collapsed by default', () => {
+    const html = generateHtml(makeConfig());
+    expect(html).toContain('"collapsedByDefault":true');
+  });
+
+  it('tells the client to start sections expanded when collapsedSections is off', () => {
+    const html = generateHtml(makeConfig({}, 16, false, false));
+    expect(html).toContain('"collapsedByDefault":false');
+  });
+
   it('highlights the active sidebar link when docsify marks the wrapping p', () => {
     const html = generateHtml(makeConfig());
     expect(html).toContain('.sidebar ul li > p.active > a');
   });
 
+  it('declares the sidebar tree config before the script that reads it', () => {
+    const html = generateHtml(makeConfig());
+    expect(html.indexOf('__docServerSidebarTree')).toBeLessThan(
+      html.indexOf('doc-server:sidebarTree')
+    );
+  });
 });

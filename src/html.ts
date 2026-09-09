@@ -35,6 +35,8 @@ export function generateHtml(config: DocServerConfig): string {
     : '';
   const fontSizeJs = readAsset('assets/js/font-size.js');
   const sidebarResizeJs = readAsset('assets/js/sidebar-resize.js');
+  const sidebarTreeCss = readAsset('assets/css/sidebar-tree.css');
+  const sidebarTreeJs = readAsset('assets/js/sidebar-tree.js');
 
   const lines: string[] = [];
 
@@ -48,6 +50,7 @@ export function generateHtml(config: DocServerConfig): string {
   lines.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">');
   lines.push('  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">');
   lines.push(`  <style>${customCss}</style>`);
+  lines.push(`  <style>${sidebarTreeCss}</style>`);
   lines.push(`  <style>:root { --doc-font-size: ${config.fontSize}px; }
 .sidebar,
 .sidebar-nav,
@@ -185,6 +188,13 @@ export function generateHtml(config: DocServerConfig): string {
   lines.push('  </script>');
   lines.push(`  <script>${fontSizeJs}</script>`);
   lines.push(`  <script>${sidebarResizeJs}</script>`);
+  // Config antes do script que a lê. Serializada com JSON.stringify em vez de
+  // concatenada, e num <script> separado para que sidebar-tree.js continue um
+  // arquivo estático legível, e não um template com buracos.
+  lines.push(`  <script>window.__docServerSidebarTree = ${JSON.stringify({
+    collapsedByDefault: config.sidebar.collapsedSections,
+  })};</script>`);
+  lines.push(`  <script>${sidebarTreeJs}</script>`);
   lines.push('</body>');
   lines.push('</html>');
 

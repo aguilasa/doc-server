@@ -5,7 +5,6 @@ import { ExcludeFilter } from './exclude.js';
 
 export interface SidebarOptions {
   numberedPrefix: boolean;
-  collapsedSections: boolean;
   includeDotFolders: boolean;
   /** Ausente = nada é excluído além das pastas `.ignore`, `_*` e `.*`. */
   isExcluded?: ExcludeFilter;

@@ -1,0 +1,89 @@
+/* Sidebar em árvore: pastas colapsáveis e caixa de filtro.
+ *
+ * Nenhuma regra aqui declara `font-size` em `.sidebar`, `.sidebar-nav` ou nos
+ * `a`/`ul`/`li`/`p` de dentro dela: o bloco inline gerado por html.ts marca
+ * esses seletores com `!important`, e uma regra daqui perderia em silêncio.
+ * Toda dimensão é em `em`, então a árvore acompanha o controle de A+/A-.
+ */
+
+/* Colapso. Escopo estreito de propósito: um `li` de pasta nunca recebe o
+ * `ul.app-sub-sidebar` que o docsify injeta (esse vai no `li` do arquivo
+ * ativo), mas restringir documenta que o índice da página não é alvo daqui. */
+.sidebar-nav li.sidebar-tree-folder.sidebar-tree-collapsed > ul {
+  display: none;
+}
+
+/* Filtro esconde por classe, nunca removendo nó: o plugin de busca do docsify
+ * reindexa a partir de `.sidebar-nav a` a cada navegação, e um `li` removido
+ * sairia do índice da busca em texto completo junto. */
+.sidebar-nav li.sidebar-tree-hidden {
+  display: none;
+}
+
+.sidebar-nav .sidebar-tree-label {
+  display: block;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Seta em glifo de texto: sem rede, sem fonte de ícone. */
+.sidebar-nav .sidebar-tree-label::before {
+  content: '\25B8';
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
+  opacity: 0.55;
+  transition: transform 0.15s ease;
+}
+
+.sidebar-nav li.sidebar-tree-folder:not(.sidebar-tree-collapsed) > .sidebar-tree-label::before {
+  transform: rotate(90deg);
+}
+
+.sidebar-nav .sidebar-tree-label:hover::before {
+  opacity: 1;
+}
+
+.sidebar-nav .sidebar-tree-label:focus-visible {
+  outline: 2px solid var(--theme-color, #42b983);
+  outline-offset: 2px;
+}
+
+/* Caixa de filtro. Fica fora de `.sidebar-nav` porque o docsify troca o
+ * innerHTML dele a cada rota — um input ali dentro seria destruído. */
+.sidebar-tree-filter-box {
+  padding: 0 15px;
+  margin: 0 0 10px;
+}
+
+.sidebar-tree-filter {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.35em 0.5em;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  /* `font: inherit` derrota o padrão do user-agent para `input`, que não
+   * herda. Sem `!important`: nada aqui compete com o bloco de font-size. */
+  font: inherit;
+  font-size: var(--doc-font-size);
+}
+
+.sidebar-tree-filter:focus {
+  outline: none;
+  border-color: var(--theme-color, #42b983);
+}
+
+.sidebar-tree-empty {
+  padding: 0 15px;
+  margin: 0;
+  opacity: 0.6;
+  font-size: var(--doc-font-size);
+}
+
+/* Duas caixas de busca na mesma sidebar confundem. Enquanto a busca em texto
+ * completo do docsify mostra resultados, o filtro da árvore some. */
+.sidebar:has(.search .results-panel.show) .sidebar-tree-filter-box {
+  display: none;
+}
