@@ -3,7 +3,7 @@ import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.mi
 
 // Configurar Mermaid
 mermaid.initialize({ 
-  startOnLoad: true,
+  startOnLoad: false,
   theme: 'default',
   themeVariables: {
     primaryColor: '#007bff',
@@ -50,3 +50,4 @@ mermaid.initialize({
 
 // Disponibilizar globalmente
 window.mermaid = mermaid;
+window.dispatchEvent(new Event('mermaid:ready'));
